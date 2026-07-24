@@ -4,6 +4,14 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>MiniMarket · Punto de Venta</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#182b22">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MiniMarket">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Public+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -115,6 +123,24 @@
   }
   .btn-admin:hover{ background:rgba(241,243,236,0.12); border-color:var(--paper); }
   .btn-admin:active{ transform:scale(0.96); }
+
+  .sync-indicador{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    font-weight:600;
+    letter-spacing:0.01em;
+    padding:6px 9px;
+    border-radius:9px;
+    white-space:nowrap;
+    background:rgba(241,243,236,0.08);
+    color:#9FB0A2;
+    transition:0.2s;
+  }
+  .sync-indicador.sync-ok{ color:#BFE4CF; background:rgba(60,138,94,0.22); }
+  .sync-indicador.sync-sincronizando{ color:#F1DFA0; background:rgba(217,164,4,0.18); }
+  .sync-indicador.sync-offline{ color:#E8B7B0; background:rgba(179,55,46,0.16); }
+  .sync-indicador.sync-error{ color:#F3B3AC; background:rgba(179,55,46,0.28); }
+  .sync-indicador.sync-inactivo{ color:#7C8A7E; }
 
   /* torn ticket edge under header */
   .tear{
@@ -853,7 +879,10 @@
           <div class="tag">Punto de venta</div>
         </div>
       </div>
-      <button class="btn-admin" onclick="solicitarPassword('admin', abrirModal)">⚙ Admin</button>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span id="syncIndicador" class="sync-indicador sync-inactivo">☁️</span>
+        <button class="btn-admin" onclick="solicitarPassword('admin', abrirModal)">⚙ Admin</button>
+      </div>
     </div>
   </div>
   <div class="tear" aria-hidden="true"></div>
@@ -1204,6 +1233,14 @@
   </div>
 </div>
 
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(err => console.error('Error registrando el service worker:', err));
+    });
+  }
+</script>
 <script>
   // ========== COMPONENTES PERSONALIZADOS (reemplazan <select>, checkbox y radio nativos) ==========
 
@@ -1365,6 +1402,153 @@
     localStorage.setItem('carrito', JSON.stringify(carrito));
     localStorage.setItem('abonos', JSON.stringify(abonos));
   }
+
+  // ========== SINCRONIZACIÓN CON SUPABASE (OFFLINE-FIRST) ==========
+  // La app SIEMPRE lee y escribe en localStorage primero (nunca espera a la red).
+  // Este motor corre en segundo plano: sube lo que cambió localmente desde la
+  // última sincronización exitosa, aplica los borrados pendientes, y baja los
+  // cambios que otros dispositivos hayan subido desde entonces. El "carrito" es
+  // el trabajo en curso de este dispositivo y nunca se sincroniza.
+  const SUPABASE_URL = 'https://oykqonexorziamktykzd.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95a3FvbmV4b3J6aWFta3R5a3pkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5MTg1MTUsImV4cCI6MjEwMDQ5NDUxNX0.xp5BERkprS5P26m9VYBz94sHBR0IcWX-lHTrymUpnHA';
+  const sb = (window.supabase && SUPABASE_URL.startsWith('https://'))
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+
+  const NOMBRES_TABLAS = ['productos', 'clientes', 'ventas', 'abonos'];
+  const LEER_TABLA = { productos: () => productos, clientes: () => clientes, ventas: () => ventas, abonos: () => abonos };
+  const ESCRIBIR_TABLA = { productos: v => productos = v, clientes: v => clientes = v, ventas: v => ventas = v, abonos: v => abonos = v };
+
+  function getUltimoSnapshot() {
+    try { return JSON.parse(localStorage.getItem('syncUltimoSnapshot')) || {}; }
+    catch { return {}; }
+  }
+  function guardarUltimoSnapshot() {
+    localStorage.setItem('syncUltimoSnapshot', JSON.stringify({ productos, clientes, ventas, abonos }));
+  }
+  function getTombstones() {
+    try { return JSON.parse(localStorage.getItem('syncTombstones')) || []; }
+    catch { return []; }
+  }
+  function agregarTombstone(tabla, id) {
+    const t = getTombstones();
+    t.push({ tabla, id });
+    localStorage.setItem('syncTombstones', JSON.stringify(t));
+  }
+  function quitarTombstones(aplicadas) {
+    const restantes = getTombstones().filter(t => !aplicadas.some(a => a.tabla === t.tabla && a.id === t.id));
+    localStorage.setItem('syncTombstones', JSON.stringify(restantes));
+  }
+  function getUltimoPull() {
+    return localStorage.getItem('syncUltimoPull') || '1970-01-01T00:00:00.000Z';
+  }
+
+  function mergeRemoto(tabla, filas) {
+    const arr = LEER_TABLA[tabla]().slice();
+    for (const fila of filas) {
+      const idx = arr.findIndex(x => x.id === fila.id);
+      if (fila.deleted) {
+        if (idx !== -1) arr.splice(idx, 1);
+      } else if (idx !== -1) {
+        arr[idx] = fila.data;
+      } else {
+        arr.push(fila.data);
+      }
+    }
+    ESCRIBIR_TABLA[tabla](arr);
+  }
+
+  let sincronizando = false;
+
+  function actualizarIndicadorSync(estado, detalle) {
+    const el = document.getElementById('syncIndicador');
+    if (!el) return;
+    const estados = {
+      ok:            { txt: '☁️ Sincronizado' },
+      sincronizando: { txt: '🔄 Sincronizando…' },
+      offline:       { txt: '📴 Sin conexión' + (detalle ? ` · ${detalle} sin subir` : '') },
+      error:         { txt: '⚠️ Error de sincronización' },
+      inactivo:      { txt: '☁️ Nube no configurada' }
+    };
+    el.className = 'sync-indicador sync-' + estado;
+    el.textContent = (estados[estado] || estados.offline).txt;
+  }
+
+  function cambiosSinSincronizar() {
+    const anterior = getUltimoSnapshot();
+    let cuenta = 0;
+    for (const tabla of NOMBRES_TABLAS) {
+      const previos = anterior[tabla] || [];
+      const mapaPrevio = new Map(previos.map(x => [x.id, JSON.stringify(x)]));
+      cuenta += LEER_TABLA[tabla]().filter(x => JSON.stringify(x) !== mapaPrevio.get(x.id)).length;
+    }
+    return cuenta + getTombstones().length;
+  }
+
+  async function sincronizar() {
+    if (!sb) { actualizarIndicadorSync('inactivo'); return; }
+    if (sincronizando) return;
+    if (!navigator.onLine) { actualizarIndicadorSync('offline', cambiosSinSincronizar() || null); return; }
+
+    sincronizando = true;
+    actualizarIndicadorSync('sincronizando');
+    try {
+      const anterior = getUltimoSnapshot();
+      const ahoraISO = new Date().toISOString();
+
+      // 1) Subir lo que cambió localmente desde la última sincronización.
+      for (const tabla of NOMBRES_TABLAS) {
+        const previos = anterior[tabla] || [];
+        const mapaPrevio = new Map(previos.map(x => [x.id, JSON.stringify(x)]));
+        const cambiados = LEER_TABLA[tabla]().filter(x => JSON.stringify(x) !== mapaPrevio.get(x.id));
+        if (cambiados.length > 0) {
+          const filas = cambiados.map(x => ({ id: x.id, data: x, updated_at: ahoraISO, deleted: false }));
+          const { error } = await sb.from(tabla).upsert(filas);
+          if (error) throw error;
+        }
+      }
+
+      // 2) Aplicar los borrados pendientes (tombstones) como borrado lógico remoto.
+      const tombstones = getTombstones();
+      const aplicadas = [];
+      for (const t of tombstones) {
+        const { error } = await sb.from(t.tabla).update({ deleted: true, updated_at: ahoraISO }).eq('id', t.id);
+        if (!error) aplicadas.push(t);
+      }
+      if (aplicadas.length) quitarTombstones(aplicadas);
+
+      // 3) Bajar cambios remotos nuevos (de este u otros dispositivos) y fusionarlos.
+      const desde = getUltimoPull();
+      for (const tabla of NOMBRES_TABLAS) {
+        const { data, error } = await sb.from(tabla).select('*').gt('updated_at', desde);
+        if (error) throw error;
+        if (data && data.length) mergeRemoto(tabla, data);
+      }
+      localStorage.setItem('syncUltimoPull', ahoraISO);
+
+      guardarTodo();
+      guardarUltimoSnapshot();
+
+      // Refrescar todas las vistas visibles con los datos ya fusionados.
+      if (typeof actualizarUI === 'function') actualizarUI();
+      if (typeof actualizarTablaProductos === 'function') actualizarTablaProductos();
+      if (typeof actualizarTablaClientes === 'function') actualizarTablaClientes();
+      if (typeof actualizarTablaAbonos === 'function') actualizarTablaAbonos();
+      if (typeof actualizarHistorial === 'function') actualizarHistorial();
+
+      actualizarIndicadorSync('ok');
+    } catch (e) {
+      console.error('Error de sincronización con Supabase:', e);
+      actualizarIndicadorSync('error');
+    } finally {
+      sincronizando = false;
+    }
+  }
+
+  window.addEventListener('online', () => sincronizar());
+  window.addEventListener('offline', () => actualizarIndicadorSync('offline', cambiosSinSincronizar() || null));
+  setInterval(() => { if (navigator.onLine) sincronizar(); }, 25000);
+  document.addEventListener('DOMContentLoaded', () => setTimeout(sincronizar, 800));
 
   // ========== CONFIRM / PROMPT PERSONALIZADOS (reemplazan confirm() y prompt() nativos) ==========
   let confirmResolve = null;
@@ -1870,12 +2054,12 @@
             </div>
           </div>
           <div class="controls">
-            ${item.esPeso ? '' : `<button class="qty-btn btn-minus" onclick="cambiarCantidad(${item.id}, -1)">−</button>`}
-            <span class="qty" id="qty-${item.id}" onclick="editarCantidadManual(${item.id})" title="Toca para editar">${item.esPeso ? item.cantidad.toFixed(3) + ' lb' : item.cantidad}</span>
-            ${item.esPeso ? '' : `<button class="qty-btn btn-plus" onclick="cambiarCantidad(${item.id}, 1)">+</button>`}
+            ${item.esPeso ? '' : `<button class="qty-btn btn-minus" onclick="cambiarCantidad('${item.id}', -1)">−</button>`}
+            <span class="qty" id="qty-${item.id}" onclick="editarCantidadManual('${item.id}')" title="Toca para editar">${item.esPeso ? item.cantidad.toFixed(3) + ' lb' : item.cantidad}</span>
+            ${item.esPeso ? '' : `<button class="qty-btn btn-plus" onclick="cambiarCantidad('${item.id}', 1)">+</button>`}
           </div>
           <div class="subtotal" id="subtotal-${item.id}">$${(item.precio * item.cantidad).toFixed(2)}</div>
-          <button class="btn-remove" onclick="eliminarDelCarrito(${item.id})" title="Quitar">✕</button>
+          <button class="btn-remove" onclick="eliminarDelCarrito('${item.id}')" title="Quitar">✕</button>
         </div>
       `).join('');
     }
@@ -1995,13 +2179,13 @@
       if (valorSelect === '__nuevo__') {
         const nombreNuevo = document.getElementById('checkoutClienteNuevo').value.trim();
         if (!nombreNuevo) { document.getElementById('errorCliente').classList.add('show'); return; }
-        const nuevoId = clientes.length ? Math.max(...clientes.map(c => c.id)) + 1 : 1;
+        const nuevoId = crypto.randomUUID();
         const nuevoCliente = { id: nuevoId, nombre: nombreNuevo, deuda: 0 };
         clientes.push(nuevoCliente);
         clienteId = nuevoCliente.id;
         clienteNombre = nuevoCliente.nombre;
       } else {
-        const cliente = clientes.find(c => c.id === parseInt(valorSelect));
+        const cliente = clientes.find(c => c.id === valorSelect);
         if (!cliente) { document.getElementById('errorCliente').classList.add('show'); return; }
         clienteId = cliente.id;
         clienteNombre = cliente.nombre;
@@ -2019,7 +2203,7 @@
       if (!producto) continue;
 
       ventas.push({
-        id: Date.now() + Math.random(),
+        id: crypto.randomUUID(),
         ventaGrupoId,
         productoId: producto.id,
         productoNombre: producto.nombre,
@@ -2272,7 +2456,7 @@
       }
       cancelarEdicionProducto();
     } else {
-      const nuevoId = productos.length ? Math.max(...productos.map(p => p.id)) + 1 : 1;
+      const nuevoId = crypto.randomUUID();
       productos.push({ id: nuevoId, codigo: codigo || null, nombre, precio, stock, costoProveedor, porPeso });
 
       document.getElementById('prodCodigo').value = '';
@@ -2329,6 +2513,7 @@
     const ok = await mostrarConfirm('¿Eliminar este producto del inventario?', { titulo: '🗑 Eliminar producto', textoAceptar: 'Sí, eliminar', peligro: true });
     if (!ok) return;
     productos = productos.filter(p => p.id !== id);
+    agregarTombstone('productos', id);
     if (editandoProductoId === id) cancelarEdicionProducto();
     guardarTodo();
     actualizarTablaProductos();
@@ -2349,8 +2534,8 @@
         <td class="mono">${p.stock}${p.porPeso ? ' lb' : ''}</td>
         <td>${p.porPeso ? '⚖️ Peso' : '📦 Unidad'}</td>
         <td style="display:flex; gap:2px;">
-          <button class="icon-btn" onclick="editarProducto(${p.id})" title="Editar">✏️</button>
-          <button class="icon-btn danger" onclick="eliminarProducto(${p.id})" title="Eliminar">🗑</button>
+          <button class="icon-btn" onclick="editarProducto('${p.id}')" title="Editar">✏️</button>
+          <button class="icon-btn danger" onclick="eliminarProducto('${p.id}')" title="Eliminar">🗑</button>
         </td>
       </tr>
     `).join('');
@@ -2361,7 +2546,7 @@
     const input = document.getElementById('nuevoCliente');
     const nombre = input.value.trim();
     if (!nombre) return;
-    const nuevoId = clientes.length ? Math.max(...clientes.map(c => c.id)) + 1 : 1;
+    const nuevoId = crypto.randomUUID();
     clientes.push({ id: nuevoId, nombre, deuda: 0 });
     input.value = '';
     guardarTodo();
@@ -2376,6 +2561,7 @@
     const ok = await mostrarConfirm(mensaje, { titulo: '🗑 Eliminar cliente', textoAceptar: 'Sí, eliminar', peligro: true });
     if (!ok) return;
     clientes = clientes.filter(c => c.id !== id);
+    agregarTombstone('clientes', id);
     guardarTodo();
     actualizarTablaClientes();
   }
@@ -2431,7 +2617,7 @@
     cliente.deuda = calcularDeudaCliente(clienteId);
 
     abonos.push({
-      id: Date.now() + Math.random(),
+      id: crypto.randomUUID(),
       clienteId,
       clienteNombre: cliente.nombre,
       monto,
@@ -2491,9 +2677,9 @@
           <td class="mono" style="color:${c.deuda > 0 ? 'var(--berry)' : 'var(--leaf)'}; font-weight:700;">$${c.deuda.toFixed(2)}</td>
           <td class="mono">${pendientes}</td>
           <td style="display:flex; gap:4px;">
-            ${c.deuda > 0 ? `<button class="icon-btn" onclick="abrirModalAbono(${c.id})" title="Abonar / pago parcial">💰</button>` : ''}
-            ${c.deuda > 0 ? `<button class="icon-btn" onclick="conciliarCliente(${c.id})" title="Pagar todo">✅</button>` : ''}
-            <button class="icon-btn danger" onclick="eliminarCliente(${c.id})" title="Eliminar">🗑</button>
+            ${c.deuda > 0 ? `<button class="icon-btn" onclick="abrirModalAbono('${c.id}')" title="Abonar / pago parcial">💰</button>` : ''}
+            ${c.deuda > 0 ? `<button class="icon-btn" onclick="conciliarCliente('${c.id}')" title="Pagar todo">✅</button>` : ''}
+            <button class="icon-btn danger" onclick="eliminarCliente('${c.id}')" title="Eliminar">🗑</button>
           </td>
         </tr>
       `;
@@ -2514,8 +2700,8 @@
         <td class="mono" style="color:var(--leaf); font-weight:700;">$${a.monto.toFixed(2)}</td>
         <td class="mono">${a.metodoPago ? METODOS_PAGO[a.metodoPago] : '—'}</td>
         <td style="display:flex; gap:4px;">
-          <button class="icon-btn" onclick="editarAbono(${a.id})" title="Editar abono">✏️</button>
-          <button class="icon-btn danger" onclick="eliminarAbono(${a.id})" title="Eliminar abono">🗑</button>
+          <button class="icon-btn" onclick="editarAbono('${a.id}')" title="Editar abono">✏️</button>
+          <button class="icon-btn danger" onclick="eliminarAbono('${a.id}')" title="Eliminar abono">🗑</button>
         </td>
       </tr>
     `).join('');
@@ -2577,6 +2763,7 @@
     if (!confirm(`¿Eliminar el abono de $${abono.monto.toFixed(2)} de ${abono.clienteNombre}? Las ventas afectadas volverán a su estado pendiente.`)) return;
 
     abonos = abonos.filter(a => a.id !== abonoId);
+    agregarTombstone('abonos', abonoId);
     recalcularPagosCliente(abono.clienteId);
     guardarTodo();
     actualizarTablaClientes();
@@ -2729,6 +2916,7 @@
     }
 
     ventas = ventas.filter(v => grupoIdDe(v) !== gid);
+    lineas.forEach(l => agregarTombstone('ventas', l.id));
 
     for (const clienteId of clientesAfectados) {
       const cliente = clientes.find(c => c.id === clienteId);
