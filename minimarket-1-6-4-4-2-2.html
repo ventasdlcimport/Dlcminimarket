@@ -1,0 +1,2831 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>MiniMarket · Punto de Venta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Public+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182b22;
+    --ink-2:#24382c;
+    --paper:#F1F3EC;
+    --paper-2:#E7EADD;
+    --line:#CDD3C2;
+    --awning:#E4572E;
+    --awning-d:#C1451F;
+    --mustard:#D9A404;
+    --mustard-d:#AD8103;
+    --leaf:#3C8A5E;
+    --leaf-d:#2C6E48;
+    --berry:#B3372E;
+    --berry-d:#8F2A22;
+    --muted:#5B6659;
+    --radius:18px;
+    --font-display:'Fraunces', serif;
+    --font-body:'Public Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono:'JetBrains Mono', 'Courier New', monospace;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{
+    font-family:var(--font-body);
+    background:
+      radial-gradient(circle at 1px 1px, rgba(24,43,34,0.06) 1px, transparent 0) 0 0/16px 16px,
+      var(--paper);
+    color:var(--ink);
+    min-height:100dvh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:14px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+  }
+
+  .app{
+    width:100%;
+    max-width:860px;
+    height:96dvh;
+    background:var(--paper);
+    border-radius:22px;
+    box-shadow:0 24px 60px -20px rgba(24,43,34,0.35), 0 2px 8px rgba(24,43,34,0.08);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    position:relative;
+  }
+
+  /* ===== HEADER ===== */
+  .header{
+    background:var(--ink);
+    color:var(--paper);
+    padding:18px 22px 16px;
+    flex-shrink:0;
+  }
+  .header-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+  .barcode{
+    width:26px; height:30px;
+    background-image: repeating-linear-gradient(90deg,
+      var(--paper) 0 2px, transparent 2px 4px,
+      var(--paper) 4px 5px, transparent 5px 7px,
+      var(--paper) 7px 9px, transparent 9px 10px,
+      var(--paper) 10px 11px, transparent 11px 13px);
+    opacity:0.85;
+    flex-shrink:0;
+  }
+  .brand-text h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-style:italic;
+    font-size:clamp(20px,5vw,26px);
+    line-height:1;
+    letter-spacing:-0.01em;
+  }
+  .brand-text .tag{
+    font-family:var(--font-mono);
+    font-size:10px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:#9FB0A2;
+    margin-top:4px;
+  }
+  .btn-admin{
+    background:transparent;
+    border:1.5px solid rgba(241,243,236,0.35);
+    color:var(--paper);
+    padding:9px 14px;
+    border-radius:11px;
+    font-family:var(--font-body);
+    font-weight:700;
+    font-size:12.5px;
+    letter-spacing:0.02em;
+    cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+    transition:0.2s;
+    white-space:nowrap;
+  }
+  .btn-admin:hover{ background:rgba(241,243,236,0.12); border-color:var(--paper); }
+  .btn-admin:active{ transform:scale(0.96); }
+
+  /* torn ticket edge under header */
+  .tear{
+    height:11px;
+    flex-shrink:0;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(-45deg, var(--ink) 6.5px, transparent 0),
+      linear-gradient(45deg, var(--ink) 6.5px, transparent 0);
+    background-size:13px 13px;
+    background-position:top left;
+    background-repeat:repeat-x;
+  }
+
+  /* ===== SEARCH ===== */
+  .search-section{
+    padding:16px 22px 12px;
+    background:var(--paper-2);
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .search-box{ display:flex; gap:8px; }
+  .search-box input{
+    flex:1;
+    min-width:0;
+    padding:14px 16px;
+    border:2px solid var(--line);
+    border-radius:13px;
+    font-family:var(--font-mono);
+    font-size:16px;
+    background:var(--paper);
+    color:var(--ink);
+    outline:none;
+    transition:0.2s;
+  }
+  .search-box input:focus{
+    border-color:var(--ink);
+    box-shadow:0 0 0 3px rgba(24,43,34,0.1);
+  }
+  .search-box input::placeholder{ color:#93998a; font-family:var(--font-body); font-size:14.5px; }
+  .search-box button{
+    width:48px;
+    height:48px;
+    padding:0;
+    background:var(--awning);
+    color:#fff;
+    border:none;
+    border-radius:13px;
+    font-size:19px;
+    cursor:pointer;
+    transition:0.2s;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .search-box button:hover{ background:var(--awning-d); }
+  .search-box button:active{ transform:scale(0.94); }
+  .search-box .btn-teclado{
+    background:var(--paper);
+    color:var(--ink);
+    border:2px solid var(--line);
+    font-size:18px;
+  }
+  .search-box .btn-teclado:hover{ background:var(--paper-2); }
+  .search-box .btn-teclado.activo{
+    background:var(--ink);
+    color:#fff;
+    border-color:var(--ink);
+  }
+
+  .feedback{
+    position:fixed;
+    top:16px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:2000;
+    padding:11px 16px;
+    border-radius:11px;
+    font-weight:600;
+    font-size:13.5px;
+    display:none;
+    border:1px solid transparent;
+    box-shadow:0 12px 32px -10px rgba(24,43,34,0.4);
+    max-width:min(92vw, 420px);
+    text-align:center;
+    animation:fadeSlide 0.25s ease;
+  }
+  @keyframes fadeSlide{ from{ opacity:0; transform:translateY(-4px);} to{ opacity:1; transform:translateY(0);} }
+  .feedback.success{ display:block; background:#E4F1E9; color:var(--leaf-d); border-color:#BFDECB; }
+  .feedback.error{ display:block; background:#F7E6E4; color:var(--berry-d); border-color:#EBC4BF; }
+  .feedback.info{ display:block; background:#FBF1D6; color:var(--mustard-d); border-color:#F1DFA0; }
+
+  /* ===== CART ===== */
+  .cart-section{
+    flex:1;
+    overflow-y:auto;
+    padding:14px 22px;
+    background:var(--paper);
+  }
+  .cart-empty{
+    text-align:center;
+    color:var(--muted);
+    padding:15% 20px;
+  }
+  .cart-empty .icon{
+    width:56px; height:56px; margin:0 auto 14px;
+    border-radius:50%;
+    background:var(--paper-2);
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px;
+  }
+  .cart-empty p:first-of-type{ font-family:var(--font-display); font-weight:600; font-size:19px; color:var(--ink); margin-bottom:4px; }
+  .cart-empty p:last-of-type{ font-size:13.5px; color:#93998a; }
+
+  .cart-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 4px;
+    border-bottom:1px dashed var(--line);
+    animation:slideIn 0.25s ease;
+  }
+  .cart-item:first-child{ padding-top:2px; }
+  @keyframes slideIn{ from{ opacity:0; transform:translateX(-10px);} to{ opacity:1; transform:translateX(0);} }
+
+  .cart-item .info{ flex:1; min-width:0; }
+  .name-row{ display:flex; align-items:baseline; gap:5px; }
+  .name-row .name{ font-weight:700; font-size:14.5px; color:var(--ink); white-space:nowrap; }
+  .name-row .dots{ flex:1; min-width:8px; border-bottom:1.5px dotted #B9C1AC; height:0.5em; }
+  .name-row .unit-price{ font-family:var(--font-mono); font-size:12px; color:var(--muted); white-space:nowrap; }
+
+  .cart-item .controls{ display:flex; align-items:center; gap:6px; flex-shrink:0; }
+  .qty-btn{
+    width:30px; height:30px;
+    border:none;
+    border-radius:50%;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:0.15s;
+    color:#fff;
+  }
+  .qty-btn:active{ transform:scale(0.88); }
+  .btn-minus{ background:var(--berry); }
+  .btn-minus:hover{ background:var(--berry-d); }
+  .btn-plus{ background:var(--leaf); }
+  .btn-plus:hover{ background:var(--leaf-d); }
+  .qty{
+    font-family:var(--font-mono);
+    font-weight:700;
+    font-size:15px;
+    min-width:26px;
+    text-align:center;
+    cursor:pointer;
+    border-radius:6px;
+    padding:2px 4px;
+    transition:background 0.15s;
+  }
+  .qty:hover{ background:var(--paper-2); }
+  .cart-item .subtotal{
+    font-family:var(--font-mono);
+    font-weight:700;
+    font-size:14.5px;
+    min-width:64px;
+    text-align:right;
+    flex-shrink:0;
+  }
+  .btn-remove{
+    background:none; border:none;
+    color:#B7BEAB;
+    font-size:17px;
+    cursor:pointer;
+    padding:2px 3px;
+    flex-shrink:0;
+    transition:0.15s;
+  }
+  .btn-remove:hover{ color:var(--berry); }
+
+  /* ===== FOOTER ===== */
+  .perf{
+    height:8px;
+    flex-shrink:0;
+    background-image:repeating-radial-gradient(circle, var(--paper) 0 2.4px, var(--paper-2) 2.5px 3px);
+    background-size:14px 8px;
+    background-color:var(--paper);
+    border-top:1px solid var(--line);
+  }
+  .footer{
+    background:var(--paper-2);
+    padding:14px 22px 18px;
+    flex-shrink:0;
+  }
+  .cart-summary{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    margin-bottom:12px;
+    gap:10px;
+  }
+  .cart-summary .total-label{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:2px;
+  }
+  .cart-summary .total{
+    font-family:var(--font-display);
+    font-size:clamp(26px,7vw,32px);
+    font-weight:700;
+    color:var(--ink);
+    line-height:1;
+  }
+  .cart-summary .total span{ color:var(--awning); }
+  .cart-summary .items-count{ color:var(--muted); font-size:12.5px; margin-top:4px; font-family:var(--font-mono); }
+
+  .btn-clear{
+    width:44px; height:44px;
+    border:1.5px solid var(--berry);
+    background:transparent;
+    color:var(--berry);
+    border-radius:12px;
+    font-size:17px;
+    cursor:pointer;
+    transition:0.2s;
+    flex-shrink:0;
+  }
+  .btn-clear:hover:not(:disabled){ background:var(--berry); color:#fff; }
+
+  .action-buttons{ display:flex; gap:10px; }
+  .action-buttons button{
+    flex:1;
+    padding:15px 10px;
+    border:none;
+    border-radius:13px;
+    font-family:var(--font-body);
+    font-size:14.5px;
+    font-weight:800;
+    letter-spacing:0.01em;
+    cursor:pointer;
+    transition:0.2s;
+    color:#fff;
+    display:flex; align-items:center; justify-content:center; gap:7px;
+  }
+  .action-buttons button:active:not(:disabled){ transform:scale(0.97); }
+  .btn-contado{ background:var(--leaf); }
+  .btn-contado:hover:not(:disabled){ background:var(--leaf-d); }
+  .btn-credito{ background:var(--mustard); }
+  .btn-credito:hover:not(:disabled){ background:var(--mustard-d); }
+  button:disabled{ opacity:0.35; cursor:not-allowed; transform:none !important; }
+
+  /* ===== MODAL ===== */
+  .modal-overlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(22,36,28,0.55);
+    backdrop-filter:blur(2px);
+    z-index:1000;
+    justify-content:center;
+    align-items:center;
+    padding:16px;
+  }
+  .modal-overlay.active{ display:flex; }
+  .modal{
+    background:var(--paper);
+    border-radius:20px;
+    max-width:920px;
+    width:100%;
+    max-height:92dvh;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    animation:modalIn 0.25s ease;
+  }
+  @keyframes modalIn{ from{ opacity:0; transform:scale(0.95) translateY(14px);} to{ opacity:1; transform:scale(1) translateY(0);} }
+
+  .modal-header{
+    padding:18px 22px;
+    background:var(--ink);
+    color:var(--paper);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-shrink:0;
+  }
+  .modal-header h2{ font-family:var(--font-display); font-weight:700; font-style:italic; font-size:20px; }
+  .modal-header .close{
+    background:none; border:none;
+    color:var(--paper);
+    font-size:24px;
+    cursor:pointer;
+    width:34px; height:34px;
+    border-radius:9px;
+    transition:0.2s;
+  }
+  .modal-header .close:hover{ background:rgba(241,243,236,0.15); }
+
+  .modal-tabs{
+    display:flex;
+    gap:4px;
+    padding:14px 22px 0;
+    background:var(--paper-2);
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+    overflow-x:auto;
+  }
+  .modal-tabs button{
+    padding:10px 16px;
+    border:1px solid var(--line);
+    border-bottom:none;
+    background:var(--paper);
+    color:var(--muted);
+    border-radius:10px 10px 0 0;
+    cursor:pointer;
+    font-weight:700;
+    font-size:13px;
+    transition:0.2s;
+    white-space:nowrap;
+    margin-bottom:-1px;
+  }
+  .modal-tabs button.active{ background:var(--paper); color:var(--ink); border-bottom:1px solid var(--paper); }
+  .modal-tabs button:hover:not(.active){ background:var(--paper-2); }
+
+  .modal-body{ padding:20px 22px 24px; overflow-y:auto; flex:1; }
+  .tab-content{ display:none; }
+  .tab-content.active{ display:block; }
+  .tab-content h3{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:16px;
+    color:var(--ink);
+    margin-bottom:12px;
+  }
+  .tab-content input, .tab-content select{
+    width:100%;
+    padding:11px 13px;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    font-size:14.5px;
+    margin-bottom:10px;
+    font-family:var(--font-body);
+    background:var(--paper);
+    color:var(--ink);
+    outline:none;
+  }
+  .tab-content input:focus, .tab-content select:focus{ border-color:var(--ink); }
+  .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .row-3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  .tab-content button.primary{
+    padding:11px 20px;
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    font-weight:700;
+    cursor:pointer;
+    transition:0.2s;
+    font-size:13.5px;
+  }
+  .tab-content button.primary:hover{ background:var(--ink-2); }
+  .divider{ border:none; border-top:1px dashed var(--line); margin:18px 0; }
+
+  .table-wrap{ overflow-x:auto; max-height:320px; overflow-y:auto; border:1px solid var(--line); border-radius:12px; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  thead th{
+    background:var(--ink);
+    color:var(--paper);
+    padding:10px 10px;
+    text-align:left;
+    position:sticky; top:0; z-index:1;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+  }
+  tbody td{ padding:9px 10px; border-bottom:1px solid var(--line); color:var(--ink); }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background:var(--paper-2); }
+  .mono{ font-family:var(--font-mono); }
+
+  .badge{
+    padding:3px 10px;
+    border-radius:20px;
+    font-size:10.5px;
+    font-weight:800;
+    letter-spacing:0.03em;
+    display:inline-block;
+    color:#fff;
+  }
+  .badge-contado{ background:var(--leaf); }
+  .badge-credito{ background:var(--mustard); color:#3a2c00; }
+  .badge-conciliado{ background:var(--leaf); }
+  .badge-pendiente{ background:var(--berry); }
+  .badge-parcial{ background:var(--mustard); color:#3a2c00; }
+
+  .icon-btn{
+    background:none; border:none;
+    cursor:pointer;
+    font-size:15px;
+    padding:3px 6px;
+    border-radius:6px;
+    transition:0.15s;
+  }
+  .icon-btn:hover{ background:var(--paper-2); }
+  .icon-btn.danger:hover{ color:var(--berry); }
+  .empty-row td{ text-align:center; color:var(--muted); padding:24px; font-style:italic; }
+
+  /* ===== CHECKOUT MODAL ===== */
+  .pago-opciones{ display:flex; flex-direction:column; gap:9px; margin-bottom:14px; }
+  .checkout-total{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 14px;
+    background:var(--paper-2);
+    border-radius:12px;
+    margin-top:6px;
+  }
+  .checkout-total span{ font-size:12.5px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.06em; }
+  .checkout-total strong{ font-family:var(--font-display); font-size:22px; color:var(--ink); }
+  .field-error{ color:var(--berry-d); font-size:12.5px; font-weight:600; margin:-6px 0 10px; display:none; }
+  .field-error.show{ display:block; }
+
+  /* ===== TOGGLE (reemplaza checkbox nativo) ===== */
+  .toggle-peso{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:11px 13px;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    margin-bottom:10px;
+    font-size:13.5px;
+    font-weight:700;
+    color:var(--ink);
+    cursor:pointer;
+    background:var(--paper);
+    transition:0.15s;
+  }
+  .toggle-peso:hover{ background:var(--paper-2); }
+  .toggle-peso.on{ border-color:var(--ink); background:var(--paper-2); }
+  .toggle-switch{
+    position:relative;
+    width:40px; height:23px;
+    flex-shrink:0;
+    border-radius:20px;
+    background:var(--line);
+    transition:0.2s;
+  }
+  .toggle-switch::after{
+    content:'';
+    position:absolute;
+    top:2.5px; left:2.5px;
+    width:18px; height:18px;
+    border-radius:50%;
+    background:#fff;
+    box-shadow:0 1px 3px rgba(24,43,34,0.35);
+    transition:0.2s;
+  }
+  .toggle-peso.on .toggle-switch{ background:var(--leaf); }
+  .toggle-peso.on .toggle-switch::after{ transform:translateX(17px); }
+
+  /* ===== CHIPS (reemplazan radios nativos) ===== */
+  .pago-chip{
+    display:flex; align-items:center; gap:10px;
+    padding:12px 14px;
+    border:1.5px solid var(--line);
+    border-radius:12px;
+    cursor:pointer;
+    font-weight:700;
+    font-size:14.5px;
+    transition:0.15s;
+    background:var(--paper);
+    text-align:left;
+    width:100%;
+    font-family:var(--font-body);
+    color:var(--ink);
+  }
+  .pago-chip:hover{ background:var(--paper-2); }
+  .pago-chip .chip-dot{
+    width:17px; height:17px;
+    border-radius:50%;
+    border:1.5px solid var(--line);
+    flex-shrink:0;
+    position:relative;
+    transition:0.15s;
+  }
+  .pago-chip.selected{ border-color:var(--ink); background:var(--paper-2); }
+  .pago-chip.selected .chip-dot{ border-color:var(--ink); }
+  .pago-chip.selected .chip-dot::after{
+    content:'';
+    position:absolute; inset:3px;
+    border-radius:50%;
+    background:var(--ink);
+  }
+
+  /* ===== CUSTOM SELECT (reemplaza <select> nativo) ===== */
+  .custom-select{ position:relative; margin-bottom:10px; }
+  .cs-trigger{
+    width:100%;
+    padding:11px 13px;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    font-size:14.5px;
+    font-family:var(--font-body);
+    background:var(--paper);
+    color:var(--ink);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    transition:0.15s;
+  }
+  .cs-trigger:hover{ background:var(--paper-2); }
+  .custom-select.open .cs-trigger{ border-color:var(--ink); }
+  .cs-trigger .cs-arrow{ transition:0.15s; color:var(--muted); font-size:11px; flex-shrink:0; }
+  .custom-select.open .cs-trigger .cs-arrow{ transform:rotate(180deg); }
+  .cs-label{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cs-options{
+    display:none;
+    position:absolute;
+    top:calc(100% + 4px);
+    left:0; right:0;
+    max-height:220px;
+    overflow-y:auto;
+    background:var(--paper);
+    border:1.5px solid var(--ink);
+    border-radius:10px;
+    box-shadow:0 12px 32px -10px rgba(24,43,34,0.4);
+    z-index:50;
+    padding:5px;
+  }
+  .custom-select.open .cs-options{ display:block; }
+  .cs-option{
+    padding:9px 10px;
+    border-radius:8px;
+    font-size:14px;
+    cursor:pointer;
+    color:var(--ink);
+  }
+  .cs-option:hover, .cs-option.highlighted{ background:var(--paper-2); }
+  .cs-option.selected{ font-weight:700; background:var(--paper-2); }
+
+  /* ===== STEPPER (reemplaza input[type=number] de stock) ===== */
+  .stepper{
+    display:flex; align-items:stretch; gap:8px;
+    margin-bottom:10px;
+  }
+  .stepper button{
+    width:38px; flex-shrink:0;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    background:var(--paper);
+    color:var(--ink);
+    font-size:17px;
+    font-weight:700;
+    cursor:pointer;
+    transition:0.15s;
+  }
+  .stepper button:hover{ background:var(--paper-2); }
+  .stepper button:active{ transform:scale(0.94); }
+  .stepper input{
+    flex:1;
+    text-align:center;
+    margin-bottom:0 !important;
+  }
+
+  /* ===== MONEY INPUT (reemplaza input[type=number] con $) ===== */
+  .money-field{ position:relative; }
+  .money-field::before{
+    content:'$';
+    position:absolute;
+    left:13px; top:50%; transform:translateY(-50%);
+    color:var(--muted);
+    font-weight:600;
+    pointer-events:none;
+  }
+  .money-field input{ padding-left:24px !important; }
+
+  /* ===== DASHBOARD ===== */
+  .dash-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  .dash-card{
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 16px;
+  }
+  .dash-card.wide{ grid-column:1 / -1; }
+  .dash-card .dash-label{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .dash-card .dash-value{
+    font-family:var(--font-display);
+    font-size:24px;
+    font-weight:700;
+    color:var(--ink);
+  }
+  .dash-card.ganancia .dash-value{ color:var(--leaf-d); }
+  .dash-card.efectivo .dash-value, .dash-card.yappy .dash-value, .dash-card.ach .dash-value{ font-size:20px; }
+  .dash-methods{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  .dash-note{ font-size:12px; color:var(--muted); line-height:1.5; margin-top:4px; }
+
+  /* ===== MODAL PASSWORD ===== */
+  .password-icon{
+    width:52px; height:52px; margin:0 auto 12px;
+    border-radius:50%;
+    background:var(--paper-2);
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px;
+  }
+
+  /* ===== MODAL CONFIRM / PROMPT (reemplazan alert/confirm/prompt nativos) ===== */
+  .xmodal{ max-width:360px; }
+  .xmodal-icon{
+    width:50px; height:50px; margin:0 auto 12px;
+    border-radius:50%;
+    background:var(--paper-2);
+    display:flex; align-items:center; justify-content:center;
+    font-size:23px;
+  }
+  .xmodal-mensaje{ text-align:center; font-size:14.5px; color:var(--ink); line-height:1.5; margin-bottom:18px; }
+  .xmodal-mensaje strong{ color:var(--berry); }
+  .xmodal-input-wrap{ position:relative; margin-bottom:6px; }
+  .xmodal-input-wrap input{
+    width:100%;
+    padding:13px 14px;
+    border:1.5px solid var(--line);
+    border-radius:11px;
+    font-size:16px;
+    font-family:var(--font-mono);
+    background:var(--paper);
+    color:var(--ink);
+    outline:none;
+    text-align:center;
+    transition:0.2s;
+  }
+  .xmodal-input-wrap input:focus{ border-color:var(--ink); box-shadow:0 0 0 3px rgba(24,43,34,0.1); }
+  .xmodal-suffix{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--muted);
+    text-align:center;
+    margin:6px 0 14px;
+  }
+  .xmodal-botones{ display:flex; gap:9px; margin-top:16px; }
+  .xmodal-botones button{ flex:1; }
+  .btn-block.danger{ background:var(--berry); color:#fff; }
+  .btn-block.danger:hover{ background:var(--berry-d); }
+  .xmodal-error{ color:var(--berry-d); font-size:12.5px; font-weight:600; text-align:center; margin:-2px 0 12px; display:none; }
+  .xmodal-error.show{ display:block; }
+
+  /* Botón de bloque reutilizable (para modales fuera de .tab-content) */
+  .btn-block{
+    width:100%;
+    padding:13px;
+    border:none;
+    border-radius:12px;
+    font-family:var(--font-body);
+    font-weight:800;
+    font-size:14.5px;
+    cursor:pointer;
+    transition:0.2s;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .btn-block.dark{ background:var(--ink); color:#fff; }
+  .btn-block.dark:hover{ background:var(--ink-2); }
+  .btn-block.outline{ background:transparent; color:var(--ink); border:1.5px solid var(--line); }
+  .btn-block.outline:hover{ background:var(--paper-2); }
+  .btn-block:active{ transform:scale(0.98); }
+
+  /* ===== VOUCHER ===== */
+  .voucher-icon{
+    width:52px; height:52px; margin:0 auto 12px;
+    border-radius:50%;
+    background:var(--paper-2);
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px;
+  }
+  .voucher-pregunta{ text-align:center; margin-bottom:14px; }
+  .voucher-pregunta p:first-child{ font-family:var(--font-display); font-weight:600; font-size:17px; color:var(--ink); margin-bottom:4px; }
+  .voucher-pregunta p:last-child{ font-size:13px; color:var(--muted); }
+  .voucher-botones{ display:flex; flex-direction:column; gap:9px; }
+  .voucher-preview-wrap{
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:10px;
+    margin-bottom:16px;
+    display:flex;
+    justify-content:center;
+  }
+  .voucher-preview-wrap img{
+    width:100%;
+    max-width:340px;
+    height:auto;
+    border-radius:8px;
+    display:block;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width:600px){
+    body{ padding:0; }
+    .app{ height:100dvh; border-radius:0; max-width:100%; }
+    .row, .row-3{ grid-template-columns:1fr; }
+    .cart-summary{ align-items:center; }
+  }
+  @media (max-width:380px){
+    .action-buttons{ flex-direction:column; }
+    .btn-clear{ width:100%; height:40px; }
+    .cart-summary{ flex-direction:column; align-items:flex-start; }
+  }
+
+  ::-webkit-scrollbar{ width:6px; height:6px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:#C4CAB8; border-radius:10px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ===== HEADER ===== -->
+  <div class="header">
+    <div class="header-top">
+      <div class="brand" title=""
+           onmousedown="iniciarPresionLogo(event)"
+           onmouseup="cancelarPresionLogo()"
+           onmouseleave="cancelarPresionLogo()"
+           ontouchstart="iniciarPresionLogo(event)"
+           ontouchend="cancelarPresionLogo()"
+           ontouchcancel="cancelarPresionLogo()"
+           oncontextmenu="return false;">
+        <div class="barcode" aria-hidden="true"></div>
+        <div class="brand-text">
+          <h1>MiniMarket</h1>
+          <div class="tag">Punto de venta</div>
+        </div>
+      </div>
+      <button class="btn-admin" onclick="solicitarPassword('admin', abrirModal)">⚙ Admin</button>
+    </div>
+  </div>
+  <div class="tear" aria-hidden="true"></div>
+
+  <!-- ===== BÚSQUEDA ===== -->
+  <div class="search-section">
+    <div class="search-box">
+      <input type="text" id="searchInput" inputmode="none" placeholder="Escanea o escribe un producto…" autofocus />
+      <button type="button" id="btnTeclado" class="btn-teclado" onclick="abrirTecladoManual(event)" aria-label="Abrir teclado">⌨</button>
+      <button onclick="buscarProducto()" aria-label="Buscar">⏎</button>
+    </div>
+  </div>
+
+  <!-- ===== CARRITO ===== -->
+  <div class="cart-section" id="cartSection">
+    <div class="cart-empty" id="cartEmpty">
+      <div class="icon">🧺</div>
+      <p>El carrito está vacío</p>
+      <p>Escanea o busca un producto para empezar</p>
+    </div>
+    <div id="cartItems"></div>
+  </div>
+
+  <div class="perf" aria-hidden="true"></div>
+
+  <!-- ===== FOOTER ===== -->
+  <div class="footer">
+    <div class="cart-summary">
+      <div>
+        <div class="total-label">Total a cobrar</div>
+        <div class="total"><span id="cartTotal">$0.00</span></div>
+        <div class="items-count" id="cartCount">0 productos</div>
+      </div>
+      <button class="btn-clear" onclick="vaciarCarrito()" id="btnClear" disabled title="Vaciar carrito">🗑</button>
+    </div>
+    <div class="action-buttons">
+      <button class="btn-contado" onclick="cerrarVenta('contado')" id="btnContado" disabled>💵 Contado</button>
+      <button class="btn-credito" onclick="cerrarVenta('credito')" id="btnCredito" disabled>📋 Fiado / Crédito</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast global: flota sobre toda la app, incluidos los modales -->
+<div id="feedback" class="feedback"></div>
+
+<!-- ===== MODAL ADMIN ===== -->
+<div class="modal-overlay" id="modalAdmin">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Administración</h2>
+      <button class="close" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="active" onclick="cambiarTab('productos')">📦 Productos</button>
+      <button onclick="cambiarTab('clientes')">👥 Clientes</button>
+      <button onclick="cambiarTab('historial')">📜 Historial</button>
+      <button onclick="cambiarTab('seguridad')">🔒 Seguridad</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- ===== TAB PRODUCTOS ===== -->
+      <div id="tabProductos" class="tab-content active">
+        <h3>Registrar producto</h3>
+        <div class="row-3">
+          <input type="text" id="prodCodigo" placeholder="Código de barras" />
+          <input type="text" id="prodNombre" placeholder="Nombre" />
+          <div class="money-field">
+            <input type="text" inputmode="decimal" id="prodPrecio" placeholder="Precio de venta" />
+          </div>
+        </div>
+        <div class="row-3">
+          <div class="stepper">
+            <button type="button" aria-label="Restar" onclick="stepperSumar('prodStock', -1)">−</button>
+            <input type="text" inputmode="numeric" id="prodStock" placeholder="Stock" />
+            <button type="button" aria-label="Sumar" onclick="stepperSumar('prodStock', 1)">+</button>
+          </div>
+          <div class="money-field">
+            <input type="text" inputmode="decimal" id="prodPrecioProveedor" placeholder="Precio proveedor (costo)" />
+          </div>
+          <div class="toggle-peso" id="prodPorPesoToggle" onclick="toggleSwitch('prodPorPesoToggle', onCambioPorPeso)">
+            <span>Se vende por peso (libras)</span>
+            <span class="toggle-switch"></span>
+          </div>
+        </div>
+        <p class="dash-note" id="notaPorPeso" style="display:none; margin:-4px 0 10px;">El precio y el stock se interpretan por libra. Al vender, se pedirá el peso exacto.</p>
+        <div style="display:flex; gap:10px;">
+          <button class="primary" id="btnGuardarProducto" onclick="registrarProducto()" style="flex:2;">➕ Agregar producto</button>
+          <button class="primary" id="btnCancelarEdicion" onclick="cancelarEdicionProducto()" style="flex:1; display:none; background:var(--berry);">Cancelar</button>
+        </div>
+        <hr class="divider" />
+        <h3>Inventario</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Código</th><th>Nombre</th><th>Precio</th><th>Costo</th><th>Stock</th><th>Tipo</th><th></th></tr></thead>
+            <tbody id="tablaProductos"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== TAB CLIENTES ===== -->
+      <div id="tabClientes" class="tab-content">
+        <h3>Clientes con crédito</h3>
+        <div style="display:flex; gap:10px; margin-bottom:6px;">
+          <input type="text" id="nuevoCliente" placeholder="Nombre del cliente" style="flex:1;" />
+          <button class="primary" onclick="agregarCliente()">➕ Agregar</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Cliente</th><th>Deuda</th><th>Ventas pendientes</th><th>Acción</th></tr></thead>
+            <tbody id="tablaClientes"></tbody>
+          </table>
+        </div>
+        <hr class="divider" />
+        <h3>Abonos registrados</h3>
+        <div class="table-wrap" style="max-height:220px;">
+          <table>
+            <thead><tr><th>Fecha</th><th>Cliente</th><th>Monto</th><th>Pago</th><th>Acción</th></tr></thead>
+            <tbody id="tablaAbonos"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== TAB HISTORIAL ===== -->
+      <div id="tabHistorial" class="tab-content">
+        <h3>Historial de ventas</h3>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+          <div class="custom-select" id="filtroTipo" data-value="todos" style="flex:1; min-width:120px;"></div>
+          <div class="custom-select" id="filtroEstado" data-value="todos" style="flex:1; min-width:120px;"></div>
+          <button class="primary" onclick="exportarCSV()" style="flex:0 0 auto;">📥 CSV</button>
+        </div>
+        <div class="table-wrap" style="max-height:360px;">
+          <table>
+            <thead><tr><th>Fecha</th><th>Producto</th><th>Cant</th><th>Total</th><th>Tipo</th><th>Pago</th><th>Cliente</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="tablaHistorial"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== TAB SEGURIDAD ===== -->
+      <div id="tabSeguridad" class="tab-content">
+        <h3>Contraseñas</h3>
+        <p class="dash-note" style="margin-bottom:14px;">La contraseña de administrador protege este panel. El dashboard oculto de ventas y ganancias (se activa tocando 5 veces el logo "MiniMarket") ya no pide contraseña.</p>
+        <div style="display:flex; flex-direction:column; gap:10px; max-width:340px;">
+          <button class="btn-block outline" onclick="cambiarPasswordAdmin()">🔑 Cambiar contraseña de administrador</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL CHECKOUT ===== -->
+<div class="modal-overlay" id="modalCheckout">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h2 id="checkoutTitulo">Finalizar venta</h2>
+      <button class="close" onclick="cerrarCheckout()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div id="checkoutPago" style="display:none;">
+        <h3>Método de pago</h3>
+        <div class="pago-opciones">
+          <button type="button" class="pago-chip" data-group="metodoPago" data-value="efectivo" onclick="chipSeleccionar('metodoPago','efectivo',ocultarErrorPago)"><span class="chip-dot"></span> 💵 Efectivo</button>
+          <button type="button" class="pago-chip" data-group="metodoPago" data-value="yappy" onclick="chipSeleccionar('metodoPago','yappy',ocultarErrorPago)"><span class="chip-dot"></span> 📲 Yappy</button>
+          <button type="button" class="pago-chip" data-group="metodoPago" data-value="ach" onclick="chipSeleccionar('metodoPago','ach',ocultarErrorPago)"><span class="chip-dot"></span> 🏦 ACH</button>
+        </div>
+        <div class="field-error" id="errorPago">Selecciona un método de pago para continuar.</div>
+      </div>
+
+      <div id="checkoutCliente" style="display:none;">
+        <h3>Cliente</h3>
+        <div class="custom-select" id="checkoutClienteSelect" data-value=""></div>
+        <input type="text" id="checkoutClienteNuevo" placeholder="Nombre del nuevo cliente" style="display:none;" />
+        <div class="field-error" id="errorCliente">Selecciona un cliente o escribe uno nuevo.</div>
+      </div>
+
+      <div class="checkout-total">
+        <span>Total</span>
+        <strong id="checkoutTotalMonto">$0.00</strong>
+      </div>
+
+      <button class="btn-block dark" style="margin-top:14px;" onclick="confirmarVenta()">✅ Confirmar venta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL VOUCHER ===== -->
+<div class="modal-overlay" id="modalVoucher">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header">
+      <h2>Venta registrada</h2>
+      <button class="close" onclick="cerrarModalVoucher()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="voucher-pregunta">
+        <p>Vista previa del comprobante</p>
+        <p>Tómale una foto a la pantalla o descárgalo como imagen</p>
+      </div>
+      <div class="voucher-preview-wrap" id="voucherPreviewWrap">
+        <img id="voucherPreviewImg" alt="Vista previa del comprobante" />
+      </div>
+      <div class="voucher-botones">
+        <button class="btn-block dark" onclick="descargarVoucher()">📥 Sí, descargar imagen</button>
+        <button class="btn-block outline" onclick="cerrarModalVoucher()">No, gracias</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL ABONO ===== -->
+<div class="modal-overlay" id="modalAbono">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header">
+      <h2 id="modalAbonoTitulo">Abono a la cuenta</h2>
+      <button class="close" onclick="cerrarModalAbono()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Cliente</div>
+        <div id="abonoClienteNombre" style="font-family:var(--font-display); font-weight:600; font-size:18px; color:var(--ink);"></div>
+      </div>
+      <div class="checkout-total" style="margin-bottom:16px;">
+        <span>Deuda actual</span>
+        <strong id="abonoDeudaActual">$0.00</strong>
+      </div>
+      <label style="font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:6px;">Monto del abono</label>
+      <div class="money-field">
+        <input type="text" inputmode="decimal" id="abonoMonto" placeholder="0.00" />
+      </div>
+      <div class="field-error" id="errorAbono">Escribe un monto válido, mayor a $0 y no mayor a la deuda.</div>
+
+      <label style="font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:6px;">Método de pago</label>
+      <div class="pago-opciones">
+        <button type="button" class="pago-chip" data-group="metodoPagoAbono" data-value="efectivo" onclick="chipSeleccionar('metodoPagoAbono','efectivo',ocultarErrorMetodoAbono)"><span class="chip-dot"></span> 💵 Efectivo</button>
+        <button type="button" class="pago-chip" data-group="metodoPagoAbono" data-value="yappy" onclick="chipSeleccionar('metodoPagoAbono','yappy',ocultarErrorMetodoAbono)"><span class="chip-dot"></span> 📲 Yappy</button>
+        <button type="button" class="pago-chip" data-group="metodoPagoAbono" data-value="ach" onclick="chipSeleccionar('metodoPagoAbono','ach',ocultarErrorMetodoAbono)"><span class="chip-dot"></span> 🏦 ACH</button>
+      </div>
+      <div class="field-error" id="errorMetodoAbono">Selecciona un método de pago para continuar.</div>
+
+      <p style="font-size:12px; color:var(--muted); margin:-4px 0 16px; line-height:1.5;">El abono se aplica primero a las ventas más antiguas. Las que queden cubiertas por completo se marcan como pagadas; si el abono no alcanza para una venta, esa venta queda con el saldo pendiente restante.</p>
+      <button class="btn-block dark" id="btnConfirmarAbono" onclick="confirmarAbono()">💰 Registrar abono</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL CONTRASEÑA ===== -->
+<div class="modal-overlay" id="modalPassword">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-header">
+      <h2 id="passwordModalTitulo">🔒 Acceso</h2>
+      <button class="close" onclick="cerrarModalPassword()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="password-icon">🔑</div>
+      <p class="dash-note" id="passwordCrearNota" style="display:none; text-align:center; margin-bottom:14px;">Aún no hay contraseña configurada. Escribe una nueva (mínimo 4 caracteres) para crearla.</p>
+      <input type="password" id="passwordInput" placeholder="Contraseña" style="width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:10px; font-size:15px; margin-bottom:8px;" onkeydown="if(event.key==='Enter') confirmarPassword();" />
+      <div class="field-error" id="errorPassword">Contraseña incorrecta.</div>
+      <button class="btn-block dark" style="margin-top:8px;" onclick="confirmarPassword()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL CONFIRMAR (reemplaza confirm() nativo) ===== -->
+<div class="modal-overlay" id="modalConfirm">
+  <div class="modal xmodal">
+    <div class="modal-header">
+      <h2 id="confirmTitulo">Confirmar</h2>
+      <button class="close" onclick="resolverConfirm(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="xmodal-icon" id="confirmIcono">❓</div>
+      <p class="xmodal-mensaje" id="confirmMensaje"></p>
+      <div class="xmodal-botones">
+        <button class="btn-block outline" onclick="resolverConfirm(false)">Cancelar</button>
+        <button class="btn-block dark" id="confirmBtnAceptar" onclick="resolverConfirm(true)">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL PROMPT (reemplaza prompt() nativo) ===== -->
+<div class="modal-overlay" id="modalPrompt">
+  <div class="modal xmodal">
+    <div class="modal-header">
+      <h2 id="promptTitulo">Escribe un valor</h2>
+      <button class="close" onclick="resolverPrompt(null)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="xmodal-icon" id="promptIcono">✏️</div>
+      <p class="xmodal-mensaje" id="promptMensaje"></p>
+      <div class="xmodal-input-wrap">
+        <input id="promptInput" onkeydown="if(event.key==='Enter'){ event.preventDefault(); resolverPromptDesdeInput(); }" />
+      </div>
+      <div class="xmodal-suffix" id="promptSufijo" style="display:none;"></div>
+      <div class="xmodal-error" id="promptError"></div>
+      <div class="xmodal-botones">
+        <button class="btn-block outline" onclick="resolverPrompt(null)">Cancelar</button>
+        <button class="btn-block dark" onclick="resolverPromptDesdeInput()">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL DASHBOARD (OCULTO) ===== -->
+<div class="modal-overlay" id="modalDashboard">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h2>📊 Resumen del día</h2>
+      <button class="close" onclick="cerrarDashboard()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="dash-grid">
+        <div class="dash-card">
+          <div class="dash-label">Ventas de hoy</div>
+          <div class="dash-value" id="dashVentasHoy">$0.00</div>
+        </div>
+        <div class="dash-card ganancia">
+          <div class="dash-label">Ganancia de hoy</div>
+          <div class="dash-value" id="dashGananciaHoy">$0.00</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-label"># de ventas</div>
+          <div class="dash-value" id="dashCantVentas">0</div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-label">Vendido a crédito hoy</div>
+          <div class="dash-value" id="dashCreditoHoy">$0.00</div>
+        </div>
+      </div>
+      <h3>Cuánto debes tener cobrado hoy</h3>
+      <div class="dash-methods">
+        <div class="dash-card efectivo">
+          <div class="dash-label">💵 Efectivo</div>
+          <div class="dash-value" id="dashEfectivo">$0.00</div>
+        </div>
+        <div class="dash-card yappy">
+          <div class="dash-label">📲 Yappy</div>
+          <div class="dash-value" id="dashYappy">$0.00</div>
+        </div>
+        <div class="dash-card ach">
+          <div class="dash-label">🏦 ACH</div>
+          <div class="dash-value" id="dashACH">$0.00</div>
+        </div>
+      </div>
+      <p class="dash-note">Incluye ventas de contado y abonos de crédito cobrados hoy, según el método de pago registrado. Las ventas a crédito aún no cobradas no cuentan como efectivo hasta que se registre su abono.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ========== COMPONENTES PERSONALIZADOS (reemplazan <select>, checkbox y radio nativos) ==========
+
+  // ---- Custom Select ----
+  function csRender(root) {
+    const opciones = root._opciones || [];
+    const actual = root.dataset.value || '';
+    const seleccionada = opciones.find(o => String(o.value) === String(actual));
+    root.innerHTML = `
+      <button type="button" class="cs-trigger">
+        <span class="cs-label">${seleccionada ? seleccionada.label : (root._placeholder || 'Selecciona…')}</span>
+        <span class="cs-arrow">▾</span>
+      </button>
+      <div class="cs-options" role="listbox">
+        ${opciones.map(o => `<div class="cs-option${String(o.value) === String(actual) ? ' selected' : ''}" role="option" data-value="${o.value}">${o.label}</div>`).join('')}
+      </div>
+    `;
+    root.querySelector('.cs-trigger').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const abierto = root.classList.contains('open');
+      document.querySelectorAll('.custom-select.open').forEach(el => el.classList.remove('open'));
+      if (!abierto) root.classList.add('open');
+    });
+    root.querySelectorAll('.cs-option').forEach(op => {
+      op.addEventListener('click', (e) => {
+        e.stopPropagation();
+        root.dataset.value = op.dataset.value;
+        root.classList.remove('open');
+        csRender(root);
+        if (typeof root._onChange === 'function') root._onChange(root.dataset.value);
+      });
+    });
+  }
+  // Crea/actualiza un custom-select con una lista de opciones [{value,label}]
+  function csSetOptions(id, opciones, valorSeleccionado, placeholder) {
+    const root = document.getElementById(id);
+    if (!root) return;
+    root._opciones = opciones;
+    if (placeholder) root._placeholder = placeholder;
+    root.dataset.value = valorSeleccionado !== undefined ? valorSeleccionado : (root.dataset.value || '');
+    csRender(root);
+  }
+  function csGetValue(id) {
+    const root = document.getElementById(id);
+    return root ? (root.dataset.value || '') : '';
+  }
+  function csSetValue(id, valor) {
+    const root = document.getElementById(id);
+    if (!root) return;
+    root.dataset.value = valor;
+    csRender(root);
+  }
+  function csOnChange(id, callback) {
+    const root = document.getElementById(id);
+    if (root) root._onChange = callback;
+  }
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.custom-select.open').forEach(el => el.classList.remove('open'));
+  });
+
+  // ---- Chips (reemplazan radio nativo) ----
+  function chipSeleccionar(grupo, valor, callback) {
+    document.querySelectorAll(`.pago-chip[data-group="${grupo}"]`).forEach(chip => {
+      chip.classList.toggle('selected', chip.dataset.value === valor);
+    });
+    if (typeof callback === 'function') callback();
+  }
+  function chipValor(grupo) {
+    const el = document.querySelector(`.pago-chip[data-group="${grupo}"].selected`);
+    return el ? el.dataset.value : null;
+  }
+  function chipLimpiar(grupo) {
+    document.querySelectorAll(`.pago-chip[data-group="${grupo}"]`).forEach(chip => chip.classList.remove('selected'));
+  }
+
+  // ---- Toggle (reemplaza checkbox nativo) ----
+  function toggleSwitch(id, callback) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle('on');
+    if (typeof callback === 'function') callback();
+  }
+  function toggleGet(id) {
+    const el = document.getElementById(id);
+    return el ? el.classList.contains('on') : false;
+  }
+  function toggleSet(id, valor) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('on', !!valor);
+  }
+
+  // ---- Stepper (reemplaza input[type=number] para cantidades enteras) ----
+  function stepperSumar(id, delta) {
+    const input = document.getElementById(id);
+    if (!input) return;
+    const actual = parseInt(input.value) || 0;
+    const nuevo = Math.max(0, actual + delta);
+    input.value = nuevo;
+  }
+
+  // ---- Sanitizado de campos de dinero/decimales (reemplaza input[type=number]) ----
+  function sanearDecimal(e) {
+    let v = e.target.value.replace(/[^0-9.]/g, '');
+    const partes = v.split('.');
+    if (partes.length > 2) v = partes[0] + '.' + partes.slice(1).join('');
+    e.target.value = v;
+  }
+  function sanearEntero(e) {
+    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.money-field input, input[inputmode="decimal"]').forEach(inp => {
+      inp.addEventListener('input', sanearDecimal);
+    });
+    document.querySelectorAll('.stepper input[inputmode="numeric"]').forEach(inp => {
+      inp.addEventListener('input', sanearEntero);
+    });
+    csSetOptions('filtroTipo', [
+      { value: 'todos', label: 'Todos los tipos' },
+      { value: 'contado', label: 'Contado' },
+      { value: 'credito', label: 'Crédito' }
+    ], 'todos');
+    csOnChange('filtroTipo', () => actualizarHistorial());
+    csSetOptions('filtroEstado', [
+      { value: 'todos', label: 'Todos los estados' },
+      { value: 'pendiente', label: 'Pendiente' },
+      { value: 'conciliado', label: 'Conciliado' }
+    ], 'todos');
+    csOnChange('filtroEstado', () => actualizarHistorial());
+    csOnChange('checkoutClienteSelect', () => onCambioClienteCheckout());
+  });
+
+  // ========== DATOS ==========
+  let productos = JSON.parse(localStorage.getItem('productos'));
+  let ventas    = JSON.parse(localStorage.getItem('ventas'));
+  let clientes  = JSON.parse(localStorage.getItem('clientes'));
+  let carrito   = JSON.parse(localStorage.getItem('carrito'));
+  let abonos    = JSON.parse(localStorage.getItem('abonos'));
+
+  if (!productos || productos.length === 0) {
+    productos = [
+      { id: 1, codigo: '7501234567890', nombre: 'Leche Entera',    precio: 25.50, stock: 20, costoProveedor: 20.00, porPeso: false },
+      { id: 2, codigo: '7501234567891', nombre: 'Pan Blanco',      precio: 15.00, stock: 15, costoProveedor: 11.00, porPeso: false },
+      { id: 3, codigo: '7501234567892', nombre: 'Huevos (12pz)',   precio: 35.00, stock: 10, costoProveedor: 28.00, porPeso: false },
+      { id: 4, codigo: '7501234567893', nombre: 'Coca-Cola 2L',    precio: 28.00, stock: 12, costoProveedor: 22.00, porPeso: false },
+      { id: 5, codigo: '7501234567894', nombre: 'Arroz 1kg',       precio: 18.50, stock: 8,  costoProveedor: 14.00, porPeso: false },
+      { id: 6, codigo: '7501234567895', nombre: 'Aceite 1L',       precio: 32.00, stock: 6,  costoProveedor: 26.00, porPeso: false },
+    ];
+  }
+  if (!ventas) ventas = [];
+  if (!clientes) clientes = [];
+  if (!carrito) carrito = [];
+  if (!abonos) abonos = [];
+
+  function guardarTodo() {
+    localStorage.setItem('productos', JSON.stringify(productos));
+    localStorage.setItem('ventas', JSON.stringify(ventas));
+    localStorage.setItem('clientes', JSON.stringify(clientes));
+    localStorage.setItem('carrito', JSON.stringify(carrito));
+    localStorage.setItem('abonos', JSON.stringify(abonos));
+  }
+
+  // ========== CONFIRM / PROMPT PERSONALIZADOS (reemplazan confirm() y prompt() nativos) ==========
+  let confirmResolve = null;
+
+  // mostrarConfirm(mensaje, { titulo, textoAceptar, peligro, icono }) → Promise<boolean>
+  function mostrarConfirm(mensaje, opciones = {}) {
+    document.getElementById('confirmTitulo').textContent = opciones.titulo || 'Confirmar';
+    document.getElementById('confirmMensaje').innerHTML = mensaje;
+    document.getElementById('confirmIcono').textContent = opciones.icono || (opciones.peligro ? '⚠️' : '❓');
+    const btn = document.getElementById('confirmBtnAceptar');
+    btn.textContent = opciones.textoAceptar || 'Confirmar';
+    btn.className = 'btn-block ' + (opciones.peligro ? 'danger' : 'dark');
+    document.getElementById('modalConfirm').classList.add('active');
+    return new Promise(resolve => { confirmResolve = resolve; });
+  }
+
+  function resolverConfirm(valor) {
+    document.getElementById('modalConfirm').classList.remove('active');
+    if (confirmResolve) { const r = confirmResolve; confirmResolve = null; r(valor); }
+  }
+
+  let promptResolve = null;
+  let promptTipoActual = 'text';
+
+  // mostrarPrompt({ titulo, mensaje, valorInicial, tipo, sufijo, icono, validar }) → Promise<string|null>
+  // validar(valor) debe devolver null si es válido, o un mensaje de error si no lo es.
+  function mostrarPrompt(opciones = {}) {
+    document.getElementById('promptTitulo').textContent = opciones.titulo || 'Escribe un valor';
+    document.getElementById('promptMensaje').innerHTML = opciones.mensaje || '';
+    document.getElementById('promptIcono').textContent = opciones.icono || '✏️';
+    const input = document.getElementById('promptInput');
+    input.type = opciones.tipo === 'password' ? 'password' : (opciones.tipo === 'number' ? 'number' : 'text');
+    if (opciones.tipo === 'number') input.step = opciones.step || 'any'; else input.removeAttribute('step');
+    input.value = opciones.valorInicial != null ? opciones.valorInicial : '';
+    input.placeholder = opciones.placeholder || '';
+    const sufijo = document.getElementById('promptSufijo');
+    if (opciones.sufijo) { sufijo.textContent = opciones.sufijo; sufijo.style.display = 'block'; }
+    else { sufijo.style.display = 'none'; }
+    document.getElementById('promptError').classList.remove('show');
+    promptValidar = opciones.validar || null;
+    document.getElementById('modalPrompt').classList.add('active');
+    setTimeout(() => { input.focus(); input.select(); }, 60);
+    return new Promise(resolve => { promptResolve = resolve; });
+  }
+
+  let promptValidar = null;
+
+  function resolverPromptDesdeInput() {
+    const valor = document.getElementById('promptInput').value;
+    if (promptValidar) {
+      const error = promptValidar(valor);
+      if (error) {
+        const el = document.getElementById('promptError');
+        el.textContent = error;
+        el.classList.add('show');
+        return;
+      }
+    }
+    resolverPrompt(valor);
+  }
+
+  function resolverPrompt(valor) {
+    document.getElementById('modalPrompt').classList.remove('active');
+    if (promptResolve) { const r = promptResolve; promptResolve = null; r(valor); }
+  }
+
+  function mostrarFeedback(msg, tipo) {
+    const feedback = document.getElementById('feedback');
+    feedback.className = 'feedback ' + tipo;
+    feedback.textContent = msg;
+    clearTimeout(window._feedbackTimeout);
+    window._feedbackTimeout = setTimeout(() => { feedback.className = 'feedback'; }, 2800);
+  }
+
+  // ========== CONTRASEÑAS (ADMIN Y DASHBOARD OCULTO) ==========
+  let passwordCallback = null;
+  let passwordTipoActual = null;
+
+  function getAdminPassword() { return localStorage.getItem('adminPassword'); }
+  function getDashboardPassword() { return localStorage.getItem('dashboardPassword'); }
+
+  // Contraseña por defecto del dashboard oculto (se puede cambiar en Admin › Seguridad).
+  const DASHBOARD_PASSWORD_DEFAULT = '2024';
+  if (!localStorage.getItem('dashboardPassword')) {
+    localStorage.setItem('dashboardPassword', DASHBOARD_PASSWORD_DEFAULT);
+  }
+
+  function solicitarPassword(tipo, callback) {
+    passwordCallback = callback;
+    passwordTipoActual = tipo;
+    const guardada = tipo === 'admin' ? getAdminPassword() : getDashboardPassword();
+    document.getElementById('passwordModalTitulo').textContent = tipo === 'admin' ? '🔒 Acceso administrador' : '🔒 Acceso resumen del día';
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('passwordCrearNota').style.display = guardada ? 'none' : 'block';
+    document.getElementById('errorPassword').classList.remove('show');
+    document.getElementById('modalPassword').classList.add('active');
+    setTimeout(() => document.getElementById('passwordInput').focus(), 60);
+  }
+
+  function cerrarModalPassword() {
+    document.getElementById('modalPassword').classList.remove('active');
+    passwordCallback = null;
+    passwordTipoActual = null;
+  }
+
+  function mostrarErrorPassword(msg) {
+    const el = document.getElementById('errorPassword');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function confirmarPassword() {
+    const valor = document.getElementById('passwordInput').value;
+    const tipo = passwordTipoActual;
+    const guardada = tipo === 'admin' ? getAdminPassword() : getDashboardPassword();
+
+    if (!guardada) {
+      // Primera vez: se está creando la contraseña.
+      if (!valor || valor.length < 4) { mostrarErrorPassword('La contraseña debe tener al menos 4 caracteres.'); return; }
+      localStorage.setItem(tipo === 'admin' ? 'adminPassword' : 'dashboardPassword', valor);
+      const cb = passwordCallback;
+      cerrarModalPassword();
+      if (cb) cb();
+      return;
+    }
+
+    if (valor !== guardada) { mostrarErrorPassword('Contraseña incorrecta.'); return; }
+    const cb = passwordCallback;
+    cerrarModalPassword();
+    if (cb) cb();
+  }
+
+  async function cambiarPasswordAdmin() {
+    const actual = getAdminPassword();
+    if (actual) {
+      const ingresada = await mostrarPrompt({ titulo: '🔑 Contraseña actual', mensaje: 'Ingresa la contraseña actual de administrador.', tipo: 'password', icono: '🔒' });
+      if (ingresada === null) return;
+      if (ingresada !== actual) { mostrarFeedback('Contraseña actual incorrecta', 'error'); return; }
+    }
+    const nueva = await mostrarPrompt({
+      titulo: '🔑 Nueva contraseña',
+      mensaje: 'Escribe la nueva contraseña de administrador (mínimo 4 caracteres).',
+      tipo: 'password',
+      icono: '🔒',
+      validar: v => (!v || v.length < 4) ? 'Debe tener al menos 4 caracteres.' : null
+    });
+    if (nueva === null) return;
+    localStorage.setItem('adminPassword', nueva);
+    mostrarFeedback('Contraseña de administrador actualizada', 'success');
+  }
+
+  async function cambiarPasswordDashboard() {
+    const actual = getDashboardPassword();
+    if (actual) {
+      const ingresada = await mostrarPrompt({ titulo: '🔑 Contraseña actual', mensaje: 'Ingresa la contraseña actual del dashboard.', tipo: 'password', icono: '🔒' });
+      if (ingresada === null) return;
+      if (ingresada !== actual) { mostrarFeedback('Contraseña actual incorrecta', 'error'); return; }
+    }
+    const nueva = await mostrarPrompt({
+      titulo: '🔑 Nueva contraseña',
+      mensaje: 'Escribe la nueva contraseña del dashboard (mínimo 4 caracteres).',
+      tipo: 'password',
+      icono: '🔒',
+      validar: v => (!v || v.length < 4) ? 'Debe tener al menos 4 caracteres.' : null
+    });
+    if (nueva === null) return;
+    localStorage.setItem('dashboardPassword', nueva);
+    mostrarFeedback('Contraseña del dashboard actualizada', 'success');
+  }
+
+  // Activador secreto del dashboard: mantener presionado el logo ~700ms.
+  const LOGO_LONGPRESS_MS = 700;
+  let logoPressTimer = null;
+  function iniciarPresionLogo(e) {
+    if (e && e.type === 'mousedown' && e.button !== 0) return;
+    clearTimeout(logoPressTimer);
+    logoPressTimer = setTimeout(() => {
+      logoPressTimer = null;
+      abrirDashboard();
+    }, LOGO_LONGPRESS_MS);
+  }
+  function cancelarPresionLogo() {
+    clearTimeout(logoPressTimer);
+    logoPressTimer = null;
+  }
+
+  // ========== DASHBOARD OCULTO (VENTAS, GANANCIA, EFECTIVO/YAPPY/ACH) ==========
+  function esHoy(fechaISO) {
+    const f = new Date(fechaISO);
+    const hoy = new Date();
+    return f.getFullYear() === hoy.getFullYear() && f.getMonth() === hoy.getMonth() && f.getDate() === hoy.getDate();
+  }
+
+  function abrirDashboard() {
+    document.getElementById('modalDashboard').classList.add('active');
+    actualizarDashboard();
+  }
+
+  function cerrarDashboard() {
+    document.getElementById('modalDashboard').classList.remove('active');
+  }
+
+  function actualizarDashboard() {
+    const ventasHoy = ventas.filter(v => esHoy(v.fecha));
+    const abonosHoy = abonos.filter(a => esHoy(a.fecha));
+
+    const totalVentasHoy = ventasHoy.reduce((s, v) => s + v.total, 0);
+    const gananciaHoy = ventasHoy.reduce((s, v) => {
+      const costo = (v.costoUnitario || 0) * v.cantidad;
+      return s + (v.total - costo);
+    }, 0);
+
+    const contadoHoy = ventasHoy.filter(v => v.tipo === 'contado');
+    const creditoHoy = ventasHoy.filter(v => v.tipo === 'credito');
+    const totalCreditoHoy = creditoHoy.reduce((s, v) => s + v.total, 0);
+
+    const porMetodo = { efectivo: 0, yappy: 0, ach: 0 };
+    contadoHoy.forEach(v => { if (v.metodoPago) porMetodo[v.metodoPago] += v.total; });
+    abonosHoy.forEach(a => { if (a.metodoPago) porMetodo[a.metodoPago] += a.monto; });
+
+    document.getElementById('dashVentasHoy').textContent = `$${totalVentasHoy.toFixed(2)}`;
+    document.getElementById('dashGananciaHoy').textContent = `$${gananciaHoy.toFixed(2)}`;
+    const cantVentasHoy = new Set(ventasHoy.map(grupoIdDe)).size;
+    document.getElementById('dashCantVentas').textContent = cantVentasHoy;
+    document.getElementById('dashCreditoHoy').textContent = `$${totalCreditoHoy.toFixed(2)}`;
+    document.getElementById('dashEfectivo').textContent = `$${porMetodo.efectivo.toFixed(2)}`;
+    document.getElementById('dashYappy').textContent = `$${porMetodo.yappy.toFixed(2)}`;
+    document.getElementById('dashACH').textContent = `$${porMetodo.ach.toFixed(2)}`;
+  }
+
+  // ========== ESCÁNER / BÚSQUEDA ==========
+  // El campo de código de barras usa inputmode="none" para que el teclado NUNCA
+  // se abra solo (ni al enfocar, ni al reenfocar tras un toque en la pantalla).
+  // El foco programático sigue funcionando para que el lector de código de barras
+  // (que actúa como teclado físico) siga escribiendo en el campo sin problema.
+  // El teclado en pantalla SOLO se abre si el usuario toca el icono ⌨ junto a la barra.
+  function abrirTecladoManual(e) {
+    if (e) e.stopPropagation();
+    const input = document.getElementById('searchInput');
+    const btn = document.getElementById('btnTeclado');
+    input.setAttribute('inputmode', 'text');
+    if (btn) btn.classList.add('activo');
+    input.blur();
+    setTimeout(() => input.focus(), 50);
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('searchInput');
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const texto = input.value.trim();
+        if (texto) { agregarAlCarrito(texto); input.value = ''; }
+      }
+    });
+
+    input.addEventListener('paste', function () {
+      setTimeout(() => {
+        const texto = input.value.trim();
+        if (texto) { agregarAlCarrito(texto); input.value = ''; }
+      }, 100);
+    });
+
+    // Al perder el foco, se vuelve a bloquear el teclado en pantalla para que
+    // no se reabra solo la próxima vez que el campo reciba foco programático.
+    input.addEventListener('blur', function () {
+      input.setAttribute('inputmode', 'none');
+      const btn = document.getElementById('btnTeclado');
+      if (btn) btn.classList.remove('activo');
+    });
+
+    actualizarUI();
+    input.focus();
+  });
+
+  // Cualquier toque en el dashboard —fuera de un modal, fuera de otro campo de
+  // texto y fuera del botón de teclado— reenfoca la barra de código para que el
+  // lector de código de barras siga funcionando. Como el input mantiene
+  // inputmode="none" en este caso, el teclado en pantalla no se abre.
+  document.addEventListener('click', function (e) {
+    if (document.querySelector('.modal-overlay.active')) return;
+    const input = document.getElementById('searchInput');
+    if (!input || document.activeElement === input) return;
+    if (e.target.closest('input, textarea, .custom-select, #btnTeclado')) return;
+    input.focus();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      cerrarModal();
+      cerrarCheckout();
+      cerrarModalVoucher();
+      cerrarModalAbono();
+      cerrarModalPassword();
+      cerrarDashboard();
+      if (document.getElementById('modalConfirm').classList.contains('active')) resolverConfirm(false);
+      if (document.getElementById('modalPrompt').classList.contains('active')) resolverPrompt(null);
+    }
+  });
+
+  // ========== MODAL ==========
+  function abrirModal() {
+    document.getElementById('modalAdmin').classList.add('active');
+    actualizarTablaProductos();
+    actualizarTablaClientes();
+    actualizarTablaAbonos();
+    actualizarHistorial();
+  }
+  function cerrarModal() {
+    document.getElementById('modalAdmin').classList.remove('active');
+    cancelarEdicionProducto();
+  }
+  function cambiarTab(tab) {
+    document.querySelectorAll('.modal-tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    const idx = { productos: 1, clientes: 2, historial: 3, seguridad: 4 }[tab];
+    document.querySelector(`.modal-tabs button:nth-child(${idx})`).classList.add('active');
+    document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+    if (tab === 'productos') actualizarTablaProductos();
+    if (tab === 'clientes') { actualizarTablaClientes(); actualizarTablaAbonos(); }
+    if (tab === 'historial') actualizarHistorial();
+  }
+
+  // ========== CARRITO ==========
+  function agregarAlCarrito(codigo) {
+    let producto = productos.find(p => p.codigo && p.codigo === codigo);
+    if (!producto) producto = productos.find(p => p.nombre.toLowerCase().includes(codigo.toLowerCase()));
+
+    if (!producto) { mostrarFeedback(`No se encontró: "${codigo}"`, 'error'); return; }
+    if (producto.stock <= 0) { mostrarFeedback(`Sin stock: "${producto.nombre}"`, 'error'); return; }
+
+    if (producto.porPeso) { agregarPorPesoAlCarrito(producto); return; }
+
+    const item = carrito.find(c => c.id === producto.id);
+    let esNuevoEnCarrito = false;
+    if (item) {
+      if (item.cantidad < producto.stock) item.cantidad++;
+      else { mostrarFeedback(`Stock máximo alcanzado de "${producto.nombre}"`, 'error'); return; }
+    } else {
+      carrito.push({ id: producto.id, nombre: producto.nombre, precio: producto.precio, cantidad: 1, esPeso: false });
+      esNuevoEnCarrito = true;
+    }
+
+    guardarTodo();
+    // Si el producto ya estaba en el carrito, solo actualizamos ese renglón (más rápido, sin parpadeo).
+    // Si es nuevo, sí hace falta reconstruir la lista para insertar el renglón.
+    if (esNuevoEnCarrito) actualizarUI(); else actualizarSoloItem(producto.id);
+    mostrarFeedback(`${producto.nombre} agregado`, 'success');
+    document.getElementById('searchInput').focus();
+  }
+
+  // Productos por peso: el precio y el stock se manejan en libras. Se pide el peso exacto vendido.
+  async function agregarPorPesoAlCarrito(producto) {
+    const item = carrito.find(c => c.id === producto.id);
+    const pesoActual = item ? item.cantidad : 0;
+    const disponible = +(producto.stock - pesoActual).toFixed(3);
+
+    const pesoStr = await mostrarPrompt({
+      titulo: `⚖️ ${producto.nombre}`,
+      mensaje: `Disponible: <strong>${disponible} lb</strong>`,
+      tipo: 'number',
+      step: '0.01',
+      placeholder: '0.00',
+      sufijo: 'Peso vendido en libras (lb)',
+      icono: '⚖️',
+      validar: v => (v === '' || isNaN(parseFloat(v)) || parseFloat(v) <= 0) ? 'Escribe un peso válido, mayor a 0.' : null
+    });
+    if (pesoStr === null) return;
+    const peso = parseFloat(pesoStr.replace(',', '.'));
+
+    if (peso > disponible + 0.001) { mostrarFeedback(`Solo hay ${disponible} lb disponibles de "${producto.nombre}"`, 'error'); return; }
+
+    if (item) {
+      item.cantidad = +(item.cantidad + peso).toFixed(3);
+      guardarTodo();
+      actualizarSoloItem(producto.id);
+    } else {
+      carrito.push({ id: producto.id, nombre: producto.nombre, precio: producto.precio, cantidad: +peso.toFixed(3), esPeso: true });
+      guardarTodo();
+      actualizarUI();
+    }
+
+    mostrarFeedback(`${producto.nombre} agregado · ${peso.toFixed(3)} lb`, 'success');
+    document.getElementById('searchInput').focus();
+  }
+
+  function buscarProducto() {
+    const input = document.getElementById('searchInput');
+    const texto = input.value.trim();
+    if (texto) { agregarAlCarrito(texto); input.value = ''; }
+  }
+
+  function cambiarCantidad(id, delta) {
+    const item = carrito.find(c => c.id === id);
+    const producto = productos.find(p => p.id === id);
+    if (!item || !producto) return;
+
+    // Los productos por peso no usan +/-; se editan tocando el valor (peso exacto en libras).
+    if (item.esPeso) { editarCantidadManual(id); return; }
+
+    const nueva = item.cantidad + delta;
+
+    if (nueva <= 0) {
+      // Cambio estructural (se quita el renglón): sí requiere reconstruir la lista.
+      carrito = carrito.filter(c => c.id !== id);
+      guardarTodo();
+      actualizarUI();
+      return;
+    }
+
+    if (nueva > producto.stock) {
+      mostrarFeedback(`Stock máximo de "${producto.nombre}" es ${producto.stock}`, 'error');
+      return;
+    }
+
+    item.cantidad = nueva;
+    guardarTodo();
+    // Actualización ligera: solo el renglón y los totales, sin re-renderizar todo el carrito.
+    actualizarSoloItem(id);
+  }
+
+  // Toca el número de cantidad para escribirla directamente en vez de dar +/- varias veces.
+  // Para productos por peso, se escribe el peso exacto en libras (admite decimales).
+  async function editarCantidadManual(id) {
+    const item = carrito.find(c => c.id === id);
+    const producto = productos.find(p => p.id === id);
+    if (!item || !producto) return;
+
+    if (item.esPeso) {
+      const valor = await mostrarPrompt({
+        titulo: `⚖️ ${producto.nombre}`,
+        mensaje: `Stock disponible: <strong>${producto.stock} lb</strong>`,
+        tipo: 'number',
+        step: '0.01',
+        valorInicial: item.cantidad,
+        sufijo: 'Peso en libras (lb)',
+        icono: '⚖️',
+        validar: v => (v === '' || isNaN(parseFloat(v)) || parseFloat(v) < 0) ? 'Escribe un peso válido.' : null
+      });
+      if (valor === null) return;
+      const nuevo = parseFloat(String(valor).replace(',', '.'));
+      if (nuevo === 0) { eliminarDelCarrito(id); return; }
+      if (nuevo > producto.stock + 0.001) { mostrarFeedback(`Stock máximo de "${producto.nombre}" es ${producto.stock} lb`, 'error'); return; }
+      item.cantidad = +nuevo.toFixed(3);
+      guardarTodo();
+      actualizarSoloItem(id);
+      return;
+    }
+
+    const valor = await mostrarPrompt({
+      titulo: `🔢 ${producto.nombre}`,
+      mensaje: `Stock disponible: <strong>${producto.stock}</strong>`,
+      tipo: 'number',
+      step: '1',
+      valorInicial: item.cantidad,
+      sufijo: 'Cantidad de unidades',
+      icono: '🔢',
+      validar: v => (v === '' || isNaN(parseInt(v)) || parseInt(v) < 0) ? 'Escribe una cantidad válida.' : null
+    });
+    if (valor === null) return;
+
+    const nueva = parseInt(valor);
+    if (nueva === 0) { eliminarDelCarrito(id); return; }
+    if (nueva > producto.stock) { mostrarFeedback(`Stock máximo de "${producto.nombre}" es ${producto.stock}`, 'error'); return; }
+
+    item.cantidad = nueva;
+    guardarTodo();
+    actualizarSoloItem(id);
+  }
+
+  function eliminarDelCarrito(id) {
+    carrito = carrito.filter(c => c.id !== id);
+    guardarTodo();
+    actualizarUI();
+  }
+
+  async function vaciarCarrito() {
+    if (carrito.length === 0) return;
+    const ok = await mostrarConfirm('¿Vaciar todo el carrito?', { titulo: '🧺 Vaciar carrito', textoAceptar: 'Sí, vaciar', peligro: true, icono: '🗑' });
+    if (!ok) return;
+    carrito = [];
+    guardarTodo();
+    actualizarUI();
+  }
+
+  function actualizarUI() {
+    const cartItems = document.getElementById('cartItems');
+    const cartEmpty = document.getElementById('cartEmpty');
+
+    if (carrito.length === 0) {
+      cartEmpty.style.display = 'block';
+      cartItems.innerHTML = '';
+    } else {
+      cartEmpty.style.display = 'none';
+      cartItems.innerHTML = carrito.map(item => `
+        <div class="cart-item" data-id="${item.id}">
+          <div class="info">
+            <div class="name-row">
+              <span class="name">${item.nombre}</span>
+              <span class="dots"></span>
+              <span class="unit-price">$${item.precio.toFixed(2)}${item.esPeso ? ' c/lb' : ' c/u'}</span>
+            </div>
+          </div>
+          <div class="controls">
+            ${item.esPeso ? '' : `<button class="qty-btn btn-minus" onclick="cambiarCantidad(${item.id}, -1)">−</button>`}
+            <span class="qty" id="qty-${item.id}" onclick="editarCantidadManual(${item.id})" title="Toca para editar">${item.esPeso ? item.cantidad.toFixed(3) + ' lb' : item.cantidad}</span>
+            ${item.esPeso ? '' : `<button class="qty-btn btn-plus" onclick="cambiarCantidad(${item.id}, 1)">+</button>`}
+          </div>
+          <div class="subtotal" id="subtotal-${item.id}">$${(item.precio * item.cantidad).toFixed(2)}</div>
+          <button class="btn-remove" onclick="eliminarDelCarrito(${item.id})" title="Quitar">✕</button>
+        </div>
+      `).join('');
+    }
+
+    actualizarResumen();
+  }
+
+  // Actualiza solo el renglón de un producto (cantidad + subtotal) y los totales,
+  // sin reconstruir todo el carrito. Evita parpadeo y hace que +/- se sientan instantáneos.
+  function actualizarSoloItem(id) {
+    const item = carrito.find(c => c.id === id);
+    if (!item) return;
+    const qtyEl = document.getElementById(`qty-${id}`);
+    const subEl = document.getElementById(`subtotal-${id}`);
+    if (qtyEl) qtyEl.textContent = item.esPeso ? item.cantidad.toFixed(3) + ' lb' : item.cantidad;
+    if (subEl) subEl.textContent = `$${(item.precio * item.cantidad).toFixed(2)}`;
+    actualizarResumen();
+  }
+
+  // Recalcula y pinta el total, el contador de productos y el estado de los botones.
+  function actualizarResumen() {
+    const total = carrito.reduce((s, i) => s + i.precio * i.cantidad, 0);
+    const cantidadTotal = carrito.reduce((s, i) => s + i.cantidad, 0);
+
+    document.getElementById('cartTotal').textContent = `$${total.toFixed(2)}`;
+    document.getElementById('cartCount').textContent = `${cantidadTotal} producto${cantidadTotal !== 1 ? 's' : ''}`;
+
+    const vacio = carrito.length === 0;
+    document.getElementById('btnClear').disabled = vacio;
+    document.getElementById('btnContado').disabled = vacio;
+    document.getElementById('btnCredito').disabled = vacio;
+  }
+
+  // ========== CERRAR VENTA (abre el modal de checkout) ==========
+  const METODOS_PAGO = { efectivo: 'Efectivo', yappy: 'Yappy', ach: 'ACH' };
+  let ventaPendienteTipo = null;
+
+  function cerrarVenta(tipo) {
+    if (carrito.length === 0) { mostrarFeedback('El carrito está vacío', 'error'); return; }
+
+    for (const item of carrito) {
+      const producto = productos.find(p => p.id === item.id);
+      if (!producto || item.cantidad > producto.stock) {
+        mostrarFeedback(`Stock insuficiente para "${item.nombre}"`, 'error');
+        return;
+      }
+    }
+
+    if (tipo === 'credito' && clientes.length === 0) {
+      mostrarFeedback('No hay clientes registrados. Ve a Admin › Clientes, o crea uno nuevo aquí mismo.', 'info');
+    }
+
+    abrirCheckout(tipo);
+  }
+
+  function abrirCheckout(tipo) {
+    ventaPendienteTipo = tipo;
+    const total = carrito.reduce((s, i) => s + i.precio * i.cantidad, 0);
+
+    document.getElementById('checkoutTitulo').textContent = tipo === 'contado' ? '💵 Venta de contado' : '📋 Venta a crédito';
+    document.getElementById('checkoutTotalMonto').textContent = `$${total.toFixed(2)}`;
+
+    document.getElementById('checkoutPago').style.display = tipo === 'contado' ? 'block' : 'none';
+    document.getElementById('checkoutCliente').style.display = tipo === 'credito' ? 'block' : 'none';
+    document.getElementById('errorPago').classList.remove('show');
+    document.getElementById('errorCliente').classList.remove('show');
+
+    if (tipo === 'contado') {
+      chipLimpiar('metodoPago');
+    }
+
+    if (tipo === 'credito') {
+      const opciones = clientes.map(c => ({ value: String(c.id), label: `${c.nombre}${c.deuda > 0 ? ` (debe $${c.deuda.toFixed(2)})` : ''}` }));
+      opciones.push({ value: '__nuevo__', label: '➕ Cliente nuevo…' });
+      csSetOptions('checkoutClienteSelect', opciones, '', 'Selecciona un cliente…');
+      document.getElementById('checkoutClienteNuevo').style.display = 'none';
+      document.getElementById('checkoutClienteNuevo').value = '';
+    }
+
+    document.getElementById('modalCheckout').classList.add('active');
+  }
+
+  function cerrarCheckout() {
+    document.getElementById('modalCheckout').classList.remove('active');
+    ventaPendienteTipo = null;
+  }
+
+  function ocultarErrorPago() {
+    document.getElementById('errorPago').classList.remove('show');
+  }
+
+  // Cuando eligen "Cliente nuevo…" en el select, mostramos el campo de texto para escribir el nombre.
+  function onCambioClienteCheckout() {
+    const valor = csGetValue('checkoutClienteSelect');
+    const campoNuevo = document.getElementById('checkoutClienteNuevo');
+    campoNuevo.style.display = valor === '__nuevo__' ? 'block' : 'none';
+    if (valor === '__nuevo__') campoNuevo.focus();
+    document.getElementById('errorCliente').classList.remove('show');
+  }
+
+  function confirmarVenta() {
+    const tipo = ventaPendienteTipo;
+    if (!tipo) return;
+
+    let clienteId = null, clienteNombre = null, metodoPago = null;
+
+    if (tipo === 'contado') {
+      const seleccionado = chipValor('metodoPago');
+      if (!seleccionado) { document.getElementById('errorPago').classList.add('show'); return; }
+      metodoPago = seleccionado;
+    }
+
+    if (tipo === 'credito') {
+      const valorSelect = csGetValue('checkoutClienteSelect');
+      if (!valorSelect) { document.getElementById('errorCliente').classList.add('show'); return; }
+
+      if (valorSelect === '__nuevo__') {
+        const nombreNuevo = document.getElementById('checkoutClienteNuevo').value.trim();
+        if (!nombreNuevo) { document.getElementById('errorCliente').classList.add('show'); return; }
+        const nuevoId = clientes.length ? Math.max(...clientes.map(c => c.id)) + 1 : 1;
+        const nuevoCliente = { id: nuevoId, nombre: nombreNuevo, deuda: 0 };
+        clientes.push(nuevoCliente);
+        clienteId = nuevoCliente.id;
+        clienteNombre = nuevoCliente.nombre;
+      } else {
+        const cliente = clientes.find(c => c.id === parseInt(valorSelect));
+        if (!cliente) { document.getElementById('errorCliente').classList.add('show'); return; }
+        clienteId = cliente.id;
+        clienteNombre = cliente.nombre;
+      }
+    }
+
+    let totalVenta = 0;
+    const itemsVenta = carrito.map(i => ({ nombre: i.nombre, precio: i.precio, cantidad: i.cantidad, esPeso: !!i.esPeso }));
+    // Un mismo id de grupo para todos los productos de esta venta, así se pueden
+    // mostrar juntos en el historial y eliminar/conciliar como una sola operación.
+    const ventaGrupoId = Date.now() + '-' + Math.random().toString(36).slice(2);
+
+    for (const item of carrito) {
+      const producto = productos.find(p => p.id === item.id);
+      if (!producto) continue;
+
+      ventas.push({
+        id: Date.now() + Math.random(),
+        ventaGrupoId,
+        productoId: producto.id,
+        productoNombre: producto.nombre,
+        cantidad: item.cantidad,
+        precioUnitario: producto.precio,
+        costoUnitario: producto.costoProveedor || 0,
+        esPeso: !!item.esPeso,
+        total: producto.precio * item.cantidad,
+        tipo,
+        metodoPago,
+        clienteId,
+        clienteNombre,
+        fecha: new Date().toISOString(),
+        fechaDisplay: new Date().toLocaleString('es-MX'),
+        codigoProducto: producto.codigo || null,
+        montoPagado: 0,
+        conciliado: false,
+        fechaConciliacion: null
+      });
+
+      producto.stock -= item.cantidad;
+      totalVenta += producto.precio * item.cantidad;
+    }
+
+    if (tipo === 'credito' && clienteId) {
+      const cliente = clientes.find(c => c.id === clienteId);
+      if (cliente) cliente.deuda += totalVenta;
+    }
+
+    ultimaVenta = {
+      fechaDisplay: new Date().toLocaleString('es-MX'),
+      items: itemsVenta,
+      total: totalVenta,
+      tipo,
+      metodoPago,
+      clienteNombre
+    };
+
+    carrito = [];
+    guardarTodo();
+    actualizarUI();
+    cerrarCheckout();
+
+    const metodoTexto = metodoPago ? ` · ${METODOS_PAGO[metodoPago]}` : '';
+    mostrarFeedback(`Venta ${tipo === 'contado' ? 'de contado' : 'a crédito'} registrada${metodoTexto} · $${totalVenta.toFixed(2)}`, 'success');
+    abrirModalVoucher();
+  }
+
+  // ========== VOUCHER (IMAGEN DESCARGABLE) ==========
+  let ultimaVenta = null;
+
+  function abrirModalVoucher() {
+    document.getElementById('modalVoucher').classList.add('active');
+    renderizarPreviewVoucher();
+  }
+
+  // Dibuja el comprobante en el canvas y lo muestra como imagen dentro del modal,
+  // para que se pueda ver en pantalla y tomarle foto antes de decidir descargarlo.
+  function renderizarPreviewVoucher() {
+    if (!ultimaVenta) return;
+    document.fonts.ready.then(() => {
+      const canvas = generarCanvasVoucher(ultimaVenta);
+      document.getElementById('voucherPreviewImg').src = canvas.toDataURL('image/png');
+    });
+  }
+
+  function cerrarModalVoucher() {
+    document.getElementById('modalVoucher').classList.remove('active');
+    document.getElementById('voucherPreviewImg').src = '';
+    document.getElementById('searchInput').focus();
+  }
+
+  function dibujarLineaPunteada(ctx, y, width, padding) {
+    ctx.strokeStyle = '#CDD3C2';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(padding, y);
+    ctx.lineTo(width - padding, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function generarCanvasVoucher(venta) {
+    const width = 380;
+    const padding = 22;
+    const alturaItem = 34;
+    const height = 250 + venta.items.length * alturaItem;
+    const escala = 2; // para que la imagen descargada se vea nítida
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width * escala;
+    canvas.height = height * escala;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(escala, escala);
+
+    // Fondo tipo papel de recibo
+    ctx.fillStyle = '#F1F3EC';
+    ctx.fillRect(0, 0, width, height);
+
+    let y = padding + 6;
+
+    ctx.fillStyle = '#182b22';
+    ctx.textAlign = 'center';
+    ctx.font = 'italic 700 24px Fraunces, Georgia, serif';
+    ctx.fillText('MiniMarket', width / 2, y);
+    y += 20;
+
+    ctx.fillStyle = '#5B6659';
+    ctx.font = '600 10px "JetBrains Mono", monospace';
+    ctx.fillText('P U N T O   D E   V E N T A', width / 2, y);
+    y += 20;
+
+    dibujarLineaPunteada(ctx, y, width, padding);
+    y += 22;
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#182b22';
+    ctx.font = '600 11.5px "JetBrains Mono", monospace';
+    ctx.fillText(venta.fechaDisplay, padding, y);
+    ctx.textAlign = 'right';
+    ctx.fillText(venta.tipo === 'contado' ? 'CONTADO' : 'CRÉDITO', width - padding, y);
+    y += 20;
+
+    ctx.textAlign = 'left';
+    if (venta.metodoPago) {
+      ctx.fillText('Método de pago: ' + METODOS_PAGO[venta.metodoPago], padding, y);
+      y += 20;
+    }
+    if (venta.clienteNombre) {
+      ctx.fillText('Cliente: ' + venta.clienteNombre, padding, y);
+      y += 20;
+    }
+
+    y += 2;
+    dibujarLineaPunteada(ctx, y, width, padding);
+    y += 22;
+
+    ctx.fillStyle = '#5B6659';
+    ctx.font = '700 10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('PRODUCTO', padding, y);
+    ctx.textAlign = 'right';
+    ctx.fillText('SUBTOTAL', width - padding, y);
+    y += 18;
+
+    venta.items.forEach(item => {
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#182b22';
+      ctx.font = '600 13px "JetBrains Mono", monospace';
+      const nombreCorto = item.nombre.length > 24 ? item.nombre.slice(0, 24) + '…' : item.nombre;
+      ctx.fillText(nombreCorto, padding, y);
+
+      ctx.textAlign = 'right';
+      ctx.fillText(`$${(item.precio * item.cantidad).toFixed(2)}`, width - padding, y);
+      y += 16;
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#5B6659';
+      ctx.font = '500 11px "JetBrains Mono", monospace';
+      const cantidadTexto = item.esPeso ? `${item.cantidad.toFixed(3)} lb` : item.cantidad;
+      ctx.fillText(`${cantidadTexto} x $${item.precio.toFixed(2)}`, padding, y);
+      y += alturaItem - 16;
+    });
+
+    dibujarLineaPunteada(ctx, y, width, padding);
+    y += 28;
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#182b22';
+    ctx.font = '800 16px "JetBrains Mono", monospace';
+    ctx.fillText('TOTAL', padding, y);
+    ctx.textAlign = 'right';
+    ctx.font = '800 19px "JetBrains Mono", monospace';
+    ctx.fillText(`$${venta.total.toFixed(2)}`, width - padding, y);
+    y += 34;
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#5B6659';
+    ctx.font = 'italic 500 12px Fraunces, Georgia, serif';
+    ctx.fillText('¡Gracias por su compra!', width / 2, y);
+
+    return canvas;
+  }
+
+  function descargarVoucher() {
+    if (!ultimaVenta) { cerrarModalVoucher(); return; }
+
+    // Esperamos a que las fuentes estén listas para que el texto del voucher se vea bien.
+    document.fonts.ready.then(() => {
+      const canvas = generarCanvasVoucher(ultimaVenta);
+      canvas.toBlob(blob => {
+        if (!blob) { mostrarFeedback('No se pudo generar la imagen', 'error'); return; }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const marcaFecha = new Date().toISOString().replace(/[:.]/g, '-');
+        a.href = url;
+        a.download = `voucher_${marcaFecha}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        // El modal se queda abierto con el preview visible, por si también quieren
+        // enviarlo o tomarle foto. Solo se cierra con el botón "No, gracias".
+        mostrarFeedback('Imagen descargada', 'success');
+      }, 'image/png');
+    });
+  }
+
+  // ========== PRODUCTOS (ADMIN) ==========
+  let editandoProductoId = null;
+
+  function registrarProducto() {
+    const codigo = document.getElementById('prodCodigo').value.trim();
+    const nombre = document.getElementById('prodNombre').value.trim();
+    const precio = parseFloat(document.getElementById('prodPrecio').value);
+    const stock = parseFloat(document.getElementById('prodStock').value);
+    const costoProveedorInput = document.getElementById('prodPrecioProveedor').value;
+    const costoProveedor = costoProveedorInput ? parseFloat(costoProveedorInput) : 0;
+    const porPeso = toggleGet('prodPorPesoToggle');
+
+    if (!nombre || isNaN(precio) || precio <= 0 || isNaN(stock) || stock < 0) {
+      mostrarFeedback('Completa nombre, precio y stock válidos.', 'error');
+      return;
+    }
+    if (costoProveedorInput && (isNaN(costoProveedor) || costoProveedor < 0)) {
+      mostrarFeedback('El precio proveedor debe ser un número válido.', 'error');
+      return;
+    }
+
+    if (editandoProductoId !== null) {
+      // Modo edición: actualizamos el producto existente en vez de crear uno nuevo.
+      const p = productos.find(p => p.id === editandoProductoId);
+      if (p) {
+        p.codigo = codigo || null;
+        p.nombre = nombre;
+        p.precio = precio;
+        p.stock = stock;
+        p.costoProveedor = costoProveedor;
+        p.porPeso = porPeso;
+
+        // Si el producto editado ya está en el carrito, reflejamos el cambio ahí también.
+        const itemCarrito = carrito.find(c => c.id === p.id);
+        if (itemCarrito) {
+          itemCarrito.nombre = nombre;
+          itemCarrito.precio = precio;
+          itemCarrito.esPeso = porPeso;
+          if (itemCarrito.cantidad > stock) itemCarrito.cantidad = stock;
+        }
+      }
+      cancelarEdicionProducto();
+    } else {
+      const nuevoId = productos.length ? Math.max(...productos.map(p => p.id)) + 1 : 1;
+      productos.push({ id: nuevoId, codigo: codigo || null, nombre, precio, stock, costoProveedor, porPeso });
+
+      document.getElementById('prodCodigo').value = '';
+      document.getElementById('prodNombre').value = '';
+      document.getElementById('prodPrecio').value = '';
+      document.getElementById('prodStock').value = '';
+      document.getElementById('prodPrecioProveedor').value = '';
+      toggleSet('prodPorPesoToggle', false);
+      onCambioPorPeso();
+    }
+
+    guardarTodo();
+    actualizarTablaProductos();
+    actualizarUI();
+  }
+
+  // Muestra u oculta la nota de "precio/stock por libra" según el checkbox.
+  function onCambioPorPeso() {
+    const marcado = toggleGet('prodPorPesoToggle');
+    document.getElementById('notaPorPeso').style.display = marcado ? 'block' : 'none';
+  }
+
+  // Carga los datos de un producto en el formulario para editarlo.
+  function editarProducto(id) {
+    const p = productos.find(p => p.id === id);
+    if (!p) return;
+    editandoProductoId = id;
+    document.getElementById('prodCodigo').value = p.codigo || '';
+    document.getElementById('prodNombre').value = p.nombre;
+    document.getElementById('prodPrecio').value = p.precio;
+    document.getElementById('prodStock').value = p.stock;
+    document.getElementById('prodPrecioProveedor').value = p.costoProveedor || '';
+    toggleSet('prodPorPesoToggle', !!p.porPeso);
+    onCambioPorPeso();
+    document.getElementById('btnGuardarProducto').textContent = '💾 Guardar cambios';
+    document.getElementById('btnCancelarEdicion').style.display = 'inline-flex';
+    document.getElementById('prodNombre').focus();
+  }
+
+  function cancelarEdicionProducto() {
+    editandoProductoId = null;
+    document.getElementById('prodCodigo').value = '';
+    document.getElementById('prodNombre').value = '';
+    document.getElementById('prodPrecio').value = '';
+    document.getElementById('prodStock').value = '';
+    document.getElementById('prodPrecioProveedor').value = '';
+    toggleSet('prodPorPesoToggle', false);
+    onCambioPorPeso();
+    document.getElementById('btnGuardarProducto').textContent = '➕ Agregar producto';
+    document.getElementById('btnCancelarEdicion').style.display = 'none';
+  }
+
+  async function eliminarProducto(id) {
+    const ok = await mostrarConfirm('¿Eliminar este producto del inventario?', { titulo: '🗑 Eliminar producto', textoAceptar: 'Sí, eliminar', peligro: true });
+    if (!ok) return;
+    productos = productos.filter(p => p.id !== id);
+    if (editandoProductoId === id) cancelarEdicionProducto();
+    guardarTodo();
+    actualizarTablaProductos();
+  }
+
+  function actualizarTablaProductos() {
+    const tbody = document.getElementById('tablaProductos');
+    if (productos.length === 0) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Sin productos registrados</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = productos.map(p => `
+      <tr>
+        <td class="mono">${p.codigo || '—'}</td>
+        <td>${p.nombre}</td>
+        <td class="mono">$${p.precio.toFixed(2)}${p.porPeso ? '/lb' : ''}</td>
+        <td class="mono">${p.costoProveedor ? '$' + p.costoProveedor.toFixed(2) : '—'}</td>
+        <td class="mono">${p.stock}${p.porPeso ? ' lb' : ''}</td>
+        <td>${p.porPeso ? '⚖️ Peso' : '📦 Unidad'}</td>
+        <td style="display:flex; gap:2px;">
+          <button class="icon-btn" onclick="editarProducto(${p.id})" title="Editar">✏️</button>
+          <button class="icon-btn danger" onclick="eliminarProducto(${p.id})" title="Eliminar">🗑</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ========== CLIENTES (ADMIN) ==========
+  function agregarCliente() {
+    const input = document.getElementById('nuevoCliente');
+    const nombre = input.value.trim();
+    if (!nombre) return;
+    const nuevoId = clientes.length ? Math.max(...clientes.map(c => c.id)) + 1 : 1;
+    clientes.push({ id: nuevoId, nombre, deuda: 0 });
+    input.value = '';
+    guardarTodo();
+    actualizarTablaClientes();
+  }
+
+  async function eliminarCliente(id) {
+    const tienePendientes = ventas.some(v => v.clienteId === id && !v.conciliado);
+    const mensaje = tienePendientes
+      ? 'Este cliente tiene ventas pendientes. <strong>¿Eliminar de todos modos?</strong>'
+      : '¿Eliminar este cliente?';
+    const ok = await mostrarConfirm(mensaje, { titulo: '🗑 Eliminar cliente', textoAceptar: 'Sí, eliminar', peligro: true });
+    if (!ok) return;
+    clientes = clientes.filter(c => c.id !== id);
+    guardarTodo();
+    actualizarTablaClientes();
+  }
+
+  // Recalcula la deuda de un cliente a partir de sus ventas a crédito sin conciliar,
+  // restando lo ya pagado (montoPagado) de cada una. Es la fuente única de verdad,
+  // así la deuda nunca se desincroniza de los pagos parciales registrados.
+  function calcularDeudaCliente(clienteId) {
+    return ventas
+      .filter(v => v.clienteId === clienteId && v.tipo === 'credito' && !v.conciliado)
+      .reduce((suma, v) => suma + (v.total - (v.montoPagado || 0)), 0);
+  }
+
+  // Aplica un monto (abono o pago total) a las ventas pendientes del cliente,
+  // empezando por las más antiguas (FIFO). Las que quedan cubiertas por completo
+  // se marcan como conciliadas (con trazabilidad de fecha); si el monto no alcanza
+  // para cubrir una venta completa, esa venta guarda cuánto se le abonó y sigue pendiente.
+  // Esta lógica se reutiliza tanto para registrar un abono nuevo como para recalcular
+  // el estado de las ventas después de editar o eliminar un abono existente.
+  function aplicarMontoAVentasPendientes(clienteId, monto) {
+    let restante = monto;
+    let ventasCerradas = 0;
+
+    const pendientes = ventas
+      .filter(v => v.clienteId === clienteId && v.tipo === 'credito' && !v.conciliado)
+      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+    for (const venta of pendientes) {
+      if (restante <= 0) break;
+      const pagadoActual = venta.montoPagado || 0;
+      const pendienteVenta = venta.total - pagadoActual;
+
+      if (restante >= pendienteVenta - 0.005) {
+        venta.montoPagado = venta.total;
+        venta.conciliado = true;
+        venta.fechaConciliacion = new Date().toISOString();
+        restante -= pendienteVenta;
+        ventasCerradas++;
+      } else {
+        venta.montoPagado = pagadoActual + restante;
+        restante = 0;
+      }
+    }
+
+    return ventasCerradas;
+  }
+
+  function registrarAbono(clienteId, monto, metodoPago) {
+    const cliente = clientes.find(c => c.id === clienteId);
+    if (!cliente) return { ventasCerradas: 0, deudaRestante: 0 };
+
+    const ventasCerradas = aplicarMontoAVentasPendientes(clienteId, monto);
+    cliente.deuda = calcularDeudaCliente(clienteId);
+
+    abonos.push({
+      id: Date.now() + Math.random(),
+      clienteId,
+      clienteNombre: cliente.nombre,
+      monto,
+      metodoPago: metodoPago || null,
+      fecha: new Date().toISOString(),
+      fechaDisplay: new Date().toLocaleString('es-MX')
+    });
+
+    return { ventasCerradas, deudaRestante: cliente.deuda };
+  }
+
+  // Recalcula desde cero el estado de pago de las ventas a crédito de un cliente,
+  // reproduciendo en orden cronológico todos sus abonos registrados. Se usa después
+  // de editar el monto de un abono o eliminarlo, ya que los abonos se aplican FIFO
+  // y un cambio en uno puede afectar cómo quedaron cubiertas las ventas siguientes.
+  function recalcularPagosCliente(clienteId) {
+    ventas.forEach(v => {
+      if (v.clienteId === clienteId && v.tipo === 'credito') {
+        v.montoPagado = 0;
+        v.conciliado = false;
+        v.fechaConciliacion = null;
+      }
+    });
+
+    const abonosCliente = abonos
+      .filter(a => a.clienteId === clienteId)
+      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+    abonosCliente.forEach(a => aplicarMontoAVentasPendientes(clienteId, a.monto));
+
+    const cliente = clientes.find(c => c.id === clienteId);
+    if (cliente) cliente.deuda = calcularDeudaCliente(clienteId);
+  }
+
+  // "Conciliar" ahora es un caso particular de abono: pagar el total de la deuda de una vez.
+  // Se abre el mismo modal de abono con el monto total precargado, para capturar también el método de pago.
+  function conciliarCliente(clienteId) {
+    const cliente = clientes.find(c => c.id === clienteId);
+    if (!cliente || cliente.deuda <= 0) return;
+    abrirModalAbono(clienteId);
+    document.getElementById('abonoMonto').value = cliente.deuda.toFixed(2);
+  }
+
+  function actualizarTablaClientes() {
+    const tbody = document.getElementById('tablaClientes');
+    if (clientes.length === 0) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="4">Sin clientes registrados</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = clientes.map(c => {
+      const pendientes = new Set(
+        ventas.filter(v => v.clienteId === c.id && v.tipo === 'credito' && !v.conciliado).map(grupoIdDe)
+      ).size;
+      return `
+        <tr>
+          <td>${c.nombre}</td>
+          <td class="mono" style="color:${c.deuda > 0 ? 'var(--berry)' : 'var(--leaf)'}; font-weight:700;">$${c.deuda.toFixed(2)}</td>
+          <td class="mono">${pendientes}</td>
+          <td style="display:flex; gap:4px;">
+            ${c.deuda > 0 ? `<button class="icon-btn" onclick="abrirModalAbono(${c.id})" title="Abonar / pago parcial">💰</button>` : ''}
+            ${c.deuda > 0 ? `<button class="icon-btn" onclick="conciliarCliente(${c.id})" title="Pagar todo">✅</button>` : ''}
+            <button class="icon-btn danger" onclick="eliminarCliente(${c.id})" title="Eliminar">🗑</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function actualizarTablaAbonos() {
+    const tbody = document.getElementById('tablaAbonos');
+    if (!abonos || abonos.length === 0) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Sin abonos registrados</td></tr>`;
+      return;
+    }
+    const ordenados = [...abonos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    tbody.innerHTML = ordenados.map(a => `
+      <tr>
+        <td class="mono" style="white-space:nowrap;">${a.fechaDisplay}</td>
+        <td>${a.clienteNombre}</td>
+        <td class="mono" style="color:var(--leaf); font-weight:700;">$${a.monto.toFixed(2)}</td>
+        <td class="mono">${a.metodoPago ? METODOS_PAGO[a.metodoPago] : '—'}</td>
+        <td style="display:flex; gap:4px;">
+          <button class="icon-btn" onclick="editarAbono(${a.id})" title="Editar abono">✏️</button>
+          <button class="icon-btn danger" onclick="eliminarAbono(${a.id})" title="Eliminar abono">🗑</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ========== MODAL ABONO (PAGO PARCIAL) ==========
+  let abonoClienteId = null;
+  let abonoEditId = null; // null = registrando abono nuevo; si tiene valor, se está editando ese abono
+
+  function abrirModalAbono(clienteId) {
+    const cliente = clientes.find(c => c.id === clienteId);
+    if (!cliente || cliente.deuda <= 0) return;
+    abonoClienteId = clienteId;
+    abonoEditId = null;
+    document.getElementById('modalAbonoTitulo').textContent = 'Abono a la cuenta';
+    document.getElementById('btnConfirmarAbono').textContent = '💰 Registrar abono';
+    document.getElementById('abonoClienteNombre').textContent = cliente.nombre;
+    document.getElementById('abonoDeudaActual').textContent = `$${cliente.deuda.toFixed(2)}`;
+    const input = document.getElementById('abonoMonto');
+    input.value = '';
+    chipLimpiar('metodoPagoAbono');
+    document.getElementById('errorAbono').classList.remove('show');
+    document.getElementById('errorMetodoAbono').classList.remove('show');
+    document.getElementById('modalAbono').classList.add('active');
+    input.focus();
+  }
+
+  // Abre el mismo modal de abono, pero precargado con los datos de un abono ya
+  // registrado, para modificar su monto o método de pago.
+  function editarAbono(abonoId) {
+    const abono = abonos.find(a => a.id === abonoId);
+    if (!abono) return;
+    const cliente = clientes.find(c => c.id === abono.clienteId);
+    if (!cliente) return;
+
+    abonoClienteId = abono.clienteId;
+    abonoEditId = abono.id;
+
+    document.getElementById('modalAbonoTitulo').textContent = 'Editar abono';
+    document.getElementById('btnConfirmarAbono').textContent = '💾 Guardar cambios';
+    document.getElementById('abonoClienteNombre').textContent = cliente.nombre;
+    // Deuda "de referencia" sin el efecto de este abono, para validar el monto máximo editable.
+    document.getElementById('abonoDeudaActual').textContent = `$${(cliente.deuda + abono.monto).toFixed(2)}`;
+    const input = document.getElementById('abonoMonto');
+    input.value = abono.monto.toFixed(2);
+    chipLimpiar('metodoPagoAbono');
+    if (abono.metodoPago) chipSeleccionar('metodoPagoAbono', abono.metodoPago, ocultarErrorMetodoAbono);
+    document.getElementById('errorAbono').classList.remove('show');
+    document.getElementById('errorMetodoAbono').classList.remove('show');
+    document.getElementById('modalAbono').classList.add('active');
+    input.focus();
+  }
+
+  // Elimina un abono y recalcula cómo quedan las ventas del cliente, ya que los
+  // abonos se aplican en orden y quitar uno puede reabrir ventas que había cerrado.
+  function eliminarAbono(abonoId) {
+    const abono = abonos.find(a => a.id === abonoId);
+    if (!abono) return;
+    if (!confirm(`¿Eliminar el abono de $${abono.monto.toFixed(2)} de ${abono.clienteNombre}? Las ventas afectadas volverán a su estado pendiente.`)) return;
+
+    abonos = abonos.filter(a => a.id !== abonoId);
+    recalcularPagosCliente(abono.clienteId);
+    guardarTodo();
+    actualizarTablaClientes();
+    actualizarTablaAbonos();
+    actualizarHistorial();
+    mostrarFeedback(`Abono de ${abono.clienteNombre} eliminado`, 'success');
+  }
+
+  function ocultarErrorMetodoAbono() {
+    document.getElementById('errorMetodoAbono').classList.remove('show');
+  }
+
+  function cerrarModalAbono() {
+    document.getElementById('modalAbono').classList.remove('active');
+    abonoClienteId = null;
+    abonoEditId = null;
+  }
+
+  function confirmarAbono() {
+    const cliente = clientes.find(c => c.id === abonoClienteId);
+    if (!cliente) return;
+
+    const editando = abonoEditId !== null;
+    const abonoOriginal = editando ? abonos.find(a => a.id === abonoEditId) : null;
+    if (editando && !abonoOriginal) return;
+
+    // Al editar, el máximo permitido es la deuda actual sumando de vuelta lo que
+    // este abono ya cubría, para no bloquear al usuario por su propio abono anterior.
+    const deudaMaxima = editando ? cliente.deuda + abonoOriginal.monto : cliente.deuda;
+
+    const monto = parseFloat(document.getElementById('abonoMonto').value);
+    if (isNaN(monto) || monto <= 0 || monto > deudaMaxima + 0.005) {
+      document.getElementById('errorAbono').classList.add('show');
+      return;
+    }
+
+    const metodoSeleccionado = chipValor('metodoPagoAbono');
+    if (!metodoSeleccionado) {
+      document.getElementById('errorMetodoAbono').classList.add('show');
+      return;
+    }
+    const metodoPago = metodoSeleccionado;
+
+    if (editando) {
+      abonoOriginal.monto = monto;
+      abonoOriginal.metodoPago = metodoPago;
+      recalcularPagosCliente(abonoClienteId);
+      guardarTodo();
+      actualizarTablaClientes();
+      actualizarTablaAbonos();
+      actualizarHistorial();
+      cerrarModalAbono();
+
+      const clienteActualizado = clientes.find(c => c.id === cliente.id);
+      const restanteTexto = clienteActualizado.deuda > 0.005
+        ? `queda un saldo de $${clienteActualizado.deuda.toFixed(2)}`
+        : 'cuenta saldada por completo';
+      mostrarFeedback(`Abono de ${cliente.nombre} actualizado a $${monto.toFixed(2)} · ${restanteTexto}`, 'success');
+      return;
+    }
+
+    const resultado = registrarAbono(abonoClienteId, monto, metodoPago);
+    guardarTodo();
+    actualizarTablaClientes();
+    actualizarTablaAbonos();
+    actualizarHistorial();
+    cerrarModalAbono();
+
+    const restanteTexto = resultado.deudaRestante > 0.005
+      ? `queda un saldo de $${resultado.deudaRestante.toFixed(2)}`
+      : 'cuenta saldada por completo';
+    mostrarFeedback(`Abono de $${monto.toFixed(2)} registrado para ${cliente.nombre} · ${restanteTexto}`, 'success');
+  }
+
+  // ========== HISTORIAL (ADMIN) ==========
+  // Ventas antiguas (guardadas antes de tener ventaGrupoId) se agrupan cada una
+  // sola con su propio id, para que todo el historial pase por el mismo camino.
+  function grupoIdDe(v) {
+    return v.ventaGrupoId || ('legacy-' + v.id);
+  }
+
+  // Agrupa las líneas de venta (una por producto) en ventas completas,
+  // conservando el orden de la más reciente a la más antigua.
+  function agruparVentas(listaVentas) {
+    const grupos = new Map();
+    for (const v of listaVentas) {
+      const gid = grupoIdDe(v);
+      if (!grupos.has(gid)) grupos.set(gid, []);
+      grupos.get(gid).push(v);
+    }
+    return [...grupos.entries()].map(([gid, lineas]) => {
+      const primero = lineas[0];
+      const total = lineas.reduce((s, l) => s + l.total, 0);
+      const montoPagado = lineas.reduce((s, l) => s + (l.montoPagado || 0), 0);
+      const conciliado = lineas.every(l => l.conciliado);
+      return {
+        gid,
+        lineas,
+        fecha: primero.fecha,
+        fechaDisplay: primero.fechaDisplay,
+        tipo: primero.tipo,
+        metodoPago: primero.metodoPago,
+        clienteNombre: primero.clienteNombre,
+        total,
+        montoPagado,
+        conciliado
+      };
+    }).sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  }
+
+  async function conciliarVenta(gid) {
+    const ok = await mostrarConfirm('¿Marcar esta venta como pagada?', { titulo: '✅ Marcar como pagada', textoAceptar: 'Sí, marcar pagada', icono: '✅' });
+    if (!ok) return;
+    const lineas = ventas.filter(v => grupoIdDe(v) === gid);
+    if (lineas.length === 0) return;
+
+    const clientesAfectados = new Set();
+    for (const venta of lineas) {
+      venta.montoPagado = venta.total;
+      venta.conciliado = true;
+      venta.fechaConciliacion = new Date().toISOString();
+      if (venta.clienteId) clientesAfectados.add(venta.clienteId);
+    }
+
+    for (const clienteId of clientesAfectados) {
+      const cliente = clientes.find(c => c.id === clienteId);
+      if (cliente) cliente.deuda = calcularDeudaCliente(clienteId);
+    }
+
+    guardarTodo();
+    actualizarHistorial();
+    actualizarTablaClientes();
+    mostrarFeedback('Venta marcada como pagada', 'success');
+  }
+
+  // Elimina por completo una venta (todos los productos que se llevaron juntos):
+  // repone el stock de cada producto y, si era a crédito, recalcula la deuda del cliente.
+  async function eliminarVentaGrupo(gid) {
+    const lineas = ventas.filter(v => grupoIdDe(v) === gid);
+    if (lineas.length === 0) return;
+
+    const ok = await mostrarConfirm('¿Eliminar esta venta por completo? Se repondrá el stock de los productos y no se puede deshacer.', { titulo: '🗑 Eliminar venta', textoAceptar: 'Sí, eliminar', icono: '🗑' });
+    if (!ok) return;
+
+    const clientesAfectados = new Set();
+    for (const linea of lineas) {
+      const producto = productos.find(p => p.id === linea.productoId);
+      if (producto) producto.stock += linea.cantidad;
+      if (linea.clienteId) clientesAfectados.add(linea.clienteId);
+    }
+
+    ventas = ventas.filter(v => grupoIdDe(v) !== gid);
+
+    for (const clienteId of clientesAfectados) {
+      const cliente = clientes.find(c => c.id === clienteId);
+      if (cliente) cliente.deuda = calcularDeudaCliente(clienteId);
+    }
+
+    guardarTodo();
+    actualizarHistorial();
+    actualizarTablaClientes();
+    actualizarTablaProductos();
+    mostrarFeedback('Venta eliminada y stock repuesto', 'success');
+  }
+
+  // Texto del estado de una venta. Las ventas de contado se cobran en el momento,
+  // así que siempre están pagadas. El estado Pendiente/Parcial solo aplica a crédito.
+  function estadoVentaHTML(g) {
+    if (g.tipo === 'contado') return `<span class="badge badge-conciliado">Pagado</span>`;
+    if (g.conciliado) return `<span class="badge badge-conciliado">Pagado</span>`;
+    const pagado = g.montoPagado || 0;
+    if (pagado > 0) {
+      return `<span class="badge badge-parcial">Parcial · $${pagado.toFixed(2)} de $${g.total.toFixed(2)}</span>`;
+    }
+    return `<span class="badge badge-pendiente">Pendiente</span>`;
+  }
+
+  function actualizarHistorial() {
+    const filtroTipo = csGetValue('filtroTipo');
+    const filtroEstado = csGetValue('filtroEstado');
+    const tbody = document.getElementById('tablaHistorial');
+
+    let filtradas = [...ventas];
+    if (filtroTipo !== 'todos') filtradas = filtradas.filter(v => v.tipo === filtroTipo);
+    if (filtroEstado !== 'todos') {
+      filtradas = filtradas.filter(v => {
+        const pagada = v.tipo === 'contado' ? true : v.conciliado;
+        return filtroEstado === 'conciliado' ? pagada : !pagada;
+      });
+    }
+
+    const grupos = agruparVentas(filtradas);
+
+    if (grupos.length === 0) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="9">Sin ventas que coincidan con el filtro</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = grupos.map(g => {
+      const productosTexto = g.lineas
+        .map(l => `${l.productoNombre} (${l.esPeso ? l.cantidad.toFixed(3) + ' lb' : 'x' + l.cantidad})`)
+        .join(', ');
+      const cantidadTexto = g.lineas.length > 1 ? `${g.lineas.length} productos` : (g.lineas[0].esPeso ? g.lineas[0].cantidad.toFixed(3) + ' lb' : String(g.lineas[0].cantidad));
+
+      return `
+      <tr>
+        <td class="mono" style="white-space:nowrap;">${g.fechaDisplay}</td>
+        <td>${productosTexto}</td>
+        <td class="mono">${cantidadTexto}</td>
+        <td class="mono">$${g.total.toFixed(2)}</td>
+        <td><span class="badge badge-${g.tipo}">${g.tipo === 'contado' ? 'Contado' : 'Crédito'}</span></td>
+        <td class="mono">${g.metodoPago ? METODOS_PAGO[g.metodoPago] : '—'}</td>
+        <td>${g.clienteNombre || '—'}</td>
+        <td>${estadoVentaHTML(g)}</td>
+        <td style="display:flex; gap:4px;">
+          ${(!g.conciliado && g.tipo === 'credito') ? `<button class="icon-btn" onclick="conciliarVenta('${g.gid}')" title="Marcar pagada">✅</button>` : ''}
+          <button class="icon-btn danger" onclick="eliminarVentaGrupo('${g.gid}')" title="Eliminar venta">🗑</button>
+        </td>
+      </tr>
+    `;
+    }).join('');
+  }
+
+  function exportarCSV() {
+    if (ventas.length === 0) { mostrarFeedback('No hay ventas para exportar', 'error'); return; }
+    const encabezado = ['Fecha', 'Producto', 'Cantidad', 'Total', 'Tipo', 'Método de pago', 'Cliente', 'Estado', 'Monto pagado', 'Saldo pendiente'];
+    const filas = ventas.map(v => {
+      const pagado = v.tipo === 'contado' ? v.total : (v.montoPagado || 0);
+      const estado = v.tipo === 'contado' ? 'Conciliado' : (v.conciliado ? 'Conciliado' : (pagado > 0 ? 'Parcial' : 'Pendiente'));
+      return [
+        v.fechaDisplay, v.productoNombre, v.cantidad, v.total.toFixed(2),
+        v.tipo, v.metodoPago ? METODOS_PAGO[v.metodoPago] : '', v.clienteNombre || '',
+        estado, pagado.toFixed(2), (v.total - pagado).toFixed(2)
+      ];
+    });
+    const csv = [encabezado, ...filas]
+      .map(fila => fila.map(campo => `"${String(campo).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ventas_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>
