@@ -1382,12 +1382,12 @@
 
   if (!productos || productos.length === 0) {
     productos = [
-      { id: 1, codigo: '7501234567890', nombre: 'Leche Entera',    precio: 25.50, stock: 20, costoProveedor: 20.00, porPeso: false },
-      { id: 2, codigo: '7501234567891', nombre: 'Pan Blanco',      precio: 15.00, stock: 15, costoProveedor: 11.00, porPeso: false },
-      { id: 3, codigo: '7501234567892', nombre: 'Huevos (12pz)',   precio: 35.00, stock: 10, costoProveedor: 28.00, porPeso: false },
-      { id: 4, codigo: '7501234567893', nombre: 'Coca-Cola 2L',    precio: 28.00, stock: 12, costoProveedor: 22.00, porPeso: false },
-      { id: 5, codigo: '7501234567894', nombre: 'Arroz 1kg',       precio: 18.50, stock: 8,  costoProveedor: 14.00, porPeso: false },
-      { id: 6, codigo: '7501234567895', nombre: 'Aceite 1L',       precio: 32.00, stock: 6,  costoProveedor: 26.00, porPeso: false },
+      { id: crypto.randomUUID(), codigo: '7501234567890', nombre: 'Leche Entera',    precio: 25.50, stock: 20, costoProveedor: 20.00, porPeso: false },
+      { id: crypto.randomUUID(), codigo: '7501234567891', nombre: 'Pan Blanco',      precio: 15.00, stock: 15, costoProveedor: 11.00, porPeso: false },
+      { id: crypto.randomUUID(), codigo: '7501234567892', nombre: 'Huevos (12pz)',   precio: 35.00, stock: 10, costoProveedor: 28.00, porPeso: false },
+      { id: crypto.randomUUID(), codigo: '7501234567893', nombre: 'Coca-Cola 2L',    precio: 28.00, stock: 12, costoProveedor: 22.00, porPeso: false },
+      { id: crypto.randomUUID(), codigo: '7501234567894', nombre: 'Arroz 1kg',       precio: 18.50, stock: 8,  costoProveedor: 14.00, porPeso: false },
+      { id: crypto.randomUUID(), codigo: '7501234567895', nombre: 'Aceite 1L',       precio: 32.00, stock: 6,  costoProveedor: 26.00, porPeso: false },
     ];
   }
   if (!ventas) ventas = [];
